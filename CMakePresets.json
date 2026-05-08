@@ -1,0 +1,66 @@
+{
+  "version": 8,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "template",
+      "hidden": true,
+      "cacheVariables": {
+        "ENABLE_FRONTEND_API": true,
+        "ENABLE_QT": true
+      }
+    },
+    {
+      "name": "macos",
+      "displayName": "macOS arm64",
+      "description": "Initial public release",
+      "inherits": ["template"],
+      "binaryDir": "${sourceDir}/build_macos",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "generator": "Xcode",
+      "warnings": {"dev": true, "deprecated": true},
+      "cacheVariables": {
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CODESIGN_IDENTITY": "$penv{CODESIGN_IDENT}",
+        "CODESIGN_TEAM": "$penv{CODESIGN_TEAM}"
+      }
+    },
+    {
+      "name": "macos-ci",
+      "inherits": ["macos"],
+      "displayName": "macOS arm64 CI build",
+      "description": "Initial public release",
+      "generator": "Xcode",
+      "cacheVariables": {
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_COMPILE_WARNING_AS_ERROR": true,
+        "ENABLE_CCACHE": true
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "macos",
+      "configurePreset": "macos",
+      "displayName": "macOS arm64",
+      "description": "Initial public release",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "macos-ci",
+      "configurePreset": "macos-ci",
+      "displayName": "macOS arm64 CI",
+      "description": "Initial public release",
+      "configuration": "RelWithDebInfo"
+    }
+  ]
+}
