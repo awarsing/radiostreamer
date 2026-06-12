@@ -12,6 +12,10 @@ Radio Streamer is an OBS plugin for sending an audio-only Icecast stream without
 - Listener/server status polling through Icecast `status-json.xsl`
 - Apple Silicon macOS release build
 
+## Installation
+
+Download the latest signed and notarized build from <https://radiostreamer.app/download/macos.zip> and follow [INSTALL.md](INSTALL.md) for setup, first-stream, and troubleshooting steps.
+
 ## Requirements
 
 - OBS Studio 31.x
