@@ -101,6 +101,10 @@ bool FfmpegPipe::enqueue(const uint8_t *data, size_t size, uint32_t frames)
 	}
 
 	totalBytes_.fetch_add(size);
+	// Notifying without the mutex keeps this real-time audio path lock-free. A wakeup can
+	// be missed if it lands between the worker's predicate check and its sleep, but the
+	// next audio callback (~10-20 ms later) re-notifies, so the worst case is one chunk
+	// of extra latency.
 	cv_.notify_one();
 	return true;
 }
@@ -167,12 +171,10 @@ void FfmpegPipe::run()
 			break;
 		}
 
-		writeToProcess(process, chunk.data(), chunkSize, "write audio to FFmpeg");
+		if (!writeToProcess(process, chunk.data(), chunkSize, "write audio to FFmpeg"))
+			break;
 
 		appendProcessOutput(process.readAll());
-
-		if (failed_.load())
-			break;
 	}
 
 	if (process.state() == QProcess::Running) {
@@ -314,5 +316,4 @@ void FfmpegPipe::appendProcessOutput(const QByteArray &output)
 	recentOutput_.append(output);
 	if (recentOutput_.size() > RECENT_OUTPUT_LIMIT)
 		recentOutput_ = recentOutput_.right(RECENT_OUTPUT_LIMIT);
-	recentOutput_ = radio_redact_credentials(QString::fromUtf8(recentOutput_)).toUtf8();
 }

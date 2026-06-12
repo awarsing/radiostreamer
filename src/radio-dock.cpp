@@ -38,6 +38,10 @@ the Free Software Foundation; either version 2 of the License, or
 #include <QUrl>
 #include <QVBoxLayout>
 
+#include <algorithm>
+#include <cstdint>
+#include <iterator>
+
 namespace {
 
 constexpr const char *CONFIG_SECTION = "OBSRadio";
@@ -132,12 +136,14 @@ QString output_stop_message(int code)
 
 int reconnect_delay_seconds(int attempt)
 {
-	constexpr int delayCount = sizeof(RECONNECT_DELAY_SECONDS) / sizeof(RECONNECT_DELAY_SECONDS[0]);
-	if (attempt < 1)
-		return RECONNECT_DELAY_SECONDS[0];
-
-	const int index = attempt - 1 < delayCount ? attempt - 1 : delayCount - 1;
+	constexpr int delayCount = static_cast<int>(std::size(RECONNECT_DELAY_SECONDS));
+	const int index = std::clamp(attempt - 1, 0, delayCount - 1);
 	return RECONNECT_DELAY_SECONDS[index];
+}
+
+double bytes_to_mib(uint64_t bytes)
+{
+	return static_cast<double>(bytes) / (1024.0 * 1024.0);
 }
 
 int json_int_value(const QJsonValue &value, int fallback = -1)
@@ -194,12 +200,12 @@ RadioDock::RadioDock(QWidget *parent) : QWidget(parent)
 	setRunningUi(false);
 
 	statsTimer_ = new QTimer(this);
-	connect(statsTimer_, &QTimer::timeout, this, [this] { updateStats(); });
+	connect(statsTimer_, &QTimer::timeout, this, &RadioDock::updateStats);
 	statsTimer_->start(1000);
 
 	icecastHealthTimer_ = new QTimer(this);
 	icecastHealthTimer_->setInterval(ICECAST_HEALTH_INTERVAL_MS);
-	connect(icecastHealthTimer_, &QTimer::timeout, this, [this] { pollIcecastHealth(); });
+	connect(icecastHealthTimer_, &QTimer::timeout, this, &RadioDock::pollIcecastHealth);
 
 	reconnectTimer_ = new QTimer(this);
 	reconnectTimer_->setSingleShot(true);
@@ -312,7 +318,7 @@ void RadioDock::buildUi()
 	root->addStretch();
 
 	connect(startButton_, &QPushButton::clicked, this, [this] { startRadio(); });
-	connect(stopButton_, &QPushButton::clicked, this, [this] { stopRadio(); });
+	connect(stopButton_, &QPushButton::clicked, this, &RadioDock::stopRadio);
 	connect(reconnect_, &QCheckBox::toggled, this, [this](bool enabled) {
 		if (enabled || !reconnectTimer_ || !reconnectTimer_->isActive())
 			return;
@@ -400,8 +406,7 @@ void RadioDock::startRadio(bool fromReconnect)
 
 	saveSettings();
 	sentMiB_ = 0.0;
-	listenerCount_ = -1;
-	serverState_ = "server checking";
+	setServerState("server checking");
 	setStatus("Starting");
 
 	obs_data_t *data = radio_settings_to_data(settings);
@@ -422,8 +427,7 @@ void RadioDock::startRadio(bool fromReconnect)
 		setStatus("Error");
 		status_->setToolTip(error && *error ? QString::fromUtf8(error)
 						    : QString("Failed to start radio output."));
-		serverState_ = "server idle";
-		updateHealthLine();
+		setServerState("server idle");
 		releaseOutput();
 		return;
 	}
@@ -454,8 +458,7 @@ void RadioDock::stopRadio()
 		icecastHealthTimer_->stop();
 	cancelIcecastHealthPoll();
 
-	serverState_ = "server idle";
-	listenerCount_ = -1;
+	setServerState("server idle");
 	setStatus("Stopping");
 	stopButton_->setEnabled(false);
 	obs_output_stop(output_);
@@ -470,8 +473,7 @@ void RadioDock::scheduleReconnect(const QString &reason)
 		reconnectStableTimer_->stop();
 
 	const int delaySeconds = reconnect_delay_seconds(++reconnectAttempt_);
-	serverState_ = "server retrying";
-	listenerCount_ = -1;
+	setServerState("server retrying");
 	setStatus(QString("Retrying in %1s").arg(delaySeconds));
 	status_->setToolTip(reason);
 	reconnectTimer_->start(delaySeconds * 1000);
@@ -501,6 +503,13 @@ void RadioDock::setStatus(const QString &status)
 	updateHealthLine();
 }
 
+void RadioDock::setServerState(const QString &state, int listeners)
+{
+	serverState_ = state;
+	listenerCount_ = listeners;
+	updateHealthLine();
+}
+
 void RadioDock::updateHealthLine()
 {
 	if (!status_)
@@ -515,10 +524,8 @@ void RadioDock::updateHealthLine()
 
 void RadioDock::updateStats()
 {
-	if (output_ && obs_output_active(output_)) {
-		const uint64_t bytes = obs_output_get_total_bytes(output_);
-		sentMiB_ = static_cast<double>(bytes) / 1024.0 / 1024.0;
-	}
+	if (output_ && obs_output_active(output_))
+		sentMiB_ = bytes_to_mib(obs_output_get_total_bytes(output_));
 
 	updateHealthLine();
 }
@@ -530,8 +537,7 @@ void RadioDock::pollIcecastHealth()
 
 	const QUrl statusUrl = icecastStatusUrl();
 	if (!statusUrl.isValid()) {
-		serverState_ = "server unknown";
-		updateHealthLine();
+		setServerState("server unknown");
 		return;
 	}
 
@@ -543,7 +549,7 @@ void RadioDock::pollIcecastHealth()
 	request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
 
 	icecastHealthReply_ = icecastHealthManager_->get(request);
-	connect(icecastHealthReply_, &QNetworkReply::finished, this, [this] { handleIcecastHealthFinished(); });
+	connect(icecastHealthReply_, &QNetworkReply::finished, this, &RadioDock::handleIcecastHealthFinished);
 }
 
 void RadioDock::handleIcecastHealthFinished()
@@ -560,11 +566,9 @@ void RadioDock::handleIcecastHealthFinished()
 	reply->deleteLater();
 
 	if (!ok) {
-		serverState_ = "server unavailable";
-		listenerCount_ = -1;
+		setServerState("server unavailable");
 		if (!errorText.isEmpty())
 			status_->setToolTip(errorText);
-		updateHealthLine();
 		return;
 	}
 
@@ -572,9 +576,7 @@ void RadioDock::handleIcecastHealthFinished()
 	const QJsonDocument document = QJsonDocument::fromJson(output, &parseError);
 
 	if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
-		serverState_ = "server unreadable";
-		listenerCount_ = -1;
-		updateHealthLine();
+		setServerState("server unreadable");
 		return;
 	}
 
@@ -583,15 +585,11 @@ void RadioDock::handleIcecastHealthFinished()
 	const QJsonObject icestats = document.object().value("icestats").toObject();
 	const QJsonObject source = source_for_mount(icestats.value("source"), mountPath);
 	if (source.isEmpty()) {
-		serverState_ = "server no mount";
-		listenerCount_ = -1;
-		updateHealthLine();
+		setServerState("server no mount");
 		return;
 	}
 
-	listenerCount_ = json_int_value(source.value("listeners"));
-	serverState_ = "server OK";
-	updateHealthLine();
+	setServerState("server OK", json_int_value(source.value("listeners")));
 }
 
 void RadioDock::cancelIcecastHealthPoll()
@@ -646,8 +644,7 @@ void RadioDock::handleOutputStopped(int code)
 
 	QString message = output_stop_message(code);
 	if (output_) {
-		const uint64_t bytes = obs_output_get_total_bytes(output_);
-		sentMiB_ = static_cast<double>(bytes) / 1024.0 / 1024.0;
+		sentMiB_ = bytes_to_mib(obs_output_get_total_bytes(output_));
 		const char *error = obs_output_get_last_error(output_);
 		if (error && *error)
 			message = QString::fromUtf8(error);
@@ -660,8 +657,7 @@ void RadioDock::handleOutputStopped(int code)
 	if (shouldReconnect) {
 		scheduleReconnect(message);
 	} else {
-		serverState_ = "server idle";
-		listenerCount_ = -1;
+		setServerState("server idle");
 		setStatus(message);
 		reconnectAttempt_ = 0;
 	}
@@ -671,5 +667,5 @@ void RadioDock::outputStopped(void *data, calldata_t *cd)
 {
 	auto *dock = static_cast<RadioDock *>(data);
 	const int code = static_cast<int>(calldata_int(cd, "code"));
-	QMetaObject::invokeMethod(dock, "handleOutputStopped", Qt::QueuedConnection, Q_ARG(int, code));
+	QMetaObject::invokeMethod(dock, [dock, code] { dock->handleOutputStopped(code); }, Qt::QueuedConnection);
 }

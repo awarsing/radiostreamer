@@ -12,6 +12,8 @@ the Free Software Foundation; either version 2 of the License, or
 
 #include <obs.h>
 
+#include <algorithm>
+
 namespace {
 
 constexpr const char *KEY_URL = "url";
@@ -35,11 +37,7 @@ void set_data_string(obs_data_t *data, const char *key, const QString &value)
 
 int clamp_int(long long value, int minValue, int maxValue)
 {
-	if (value < minValue)
-		return minValue;
-	if (value > maxValue)
-		return maxValue;
-	return static_cast<int>(value);
+	return static_cast<int>(std::clamp<long long>(value, minValue, maxValue));
 }
 
 } // namespace

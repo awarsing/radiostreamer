@@ -51,6 +51,7 @@ private:
 	void scheduleReconnect(const QString &reason);
 	void setRunningUi(bool running);
 	void setStatus(const QString &status);
+	void setServerState(const QString &state, int listeners = -1);
 	void updateHealthLine();
 	void updateStats();
 	void pollIcecastHealth();
