@@ -12,6 +12,7 @@ the Free Software Foundation; either version 2 of the License, or
 
 #include "radio-settings.hpp"
 
+#include <QElapsedTimer>
 #include <QWidget>
 
 class QComboBox;
@@ -79,6 +80,7 @@ private:
 	obs_output_t *output_ = nullptr;
 	QString statusState_ = "Stopped";
 	QString serverState_ = "server idle";
+	QElapsedTimer streamStartedAt_;
 	int listenerCount_ = -1;
 	int reconnectAttempt_ = 0;
 	double sentMiB_ = 0.0;

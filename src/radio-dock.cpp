@@ -49,7 +49,11 @@ constexpr const char *DOCK_OUTPUT_NAME = "Radio Streamer Icecast";
 constexpr int RECONNECT_DELAY_SECONDS[] = {2, 5, 10, 20, 30};
 constexpr int RECONNECT_STABLE_MS = 60000;
 constexpr int ICECAST_HEALTH_INTERVAL_MS = 5000;
+constexpr int ICECAST_HEALTH_STARTUP_INTERVAL_MS = 2000;
 constexpr int ICECAST_HEALTH_TIMEOUT_SECONDS = 3;
+// FFmpeg needs a few seconds to connect before the mount shows up in
+// status-json.xsl; don't report a missing mount during that window.
+constexpr qint64 ICECAST_MOUNT_GRACE_MS = 15000;
 
 QString config_string(config_t *config, const char *key, const QString &fallback)
 {
@@ -439,8 +443,11 @@ void RadioDock::startRadio(bool fromReconnect)
 	status_->setToolTip(
 		QString("Streaming %1 to %2")
 			.arg(radio_codec_label(settings.codec), radio_settings_icecast_url(settings, false)));
-	if (icecastHealthTimer_)
+	streamStartedAt_.start();
+	if (icecastHealthTimer_) {
+		icecastHealthTimer_->setInterval(ICECAST_HEALTH_STARTUP_INTERVAL_MS);
 		icecastHealthTimer_->start();
+	}
 	pollIcecastHealth();
 }
 
@@ -585,10 +592,14 @@ void RadioDock::handleIcecastHealthFinished()
 	const QJsonObject icestats = document.object().value("icestats").toObject();
 	const QJsonObject source = source_for_mount(icestats.value("source"), mountPath);
 	if (source.isEmpty()) {
-		setServerState("server no mount");
+		const bool warmingUp = streamStartedAt_.isValid() &&
+				       streamStartedAt_.elapsed() < ICECAST_MOUNT_GRACE_MS;
+		setServerState(warmingUp ? "server checking" : "server no mount");
 		return;
 	}
 
+	if (icecastHealthTimer_ && icecastHealthTimer_->interval() != ICECAST_HEALTH_INTERVAL_MS)
+		icecastHealthTimer_->setInterval(ICECAST_HEALTH_INTERVAL_MS);
 	setServerState("server OK", json_int_value(source.value("listeners")));
 }
 
