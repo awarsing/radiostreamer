@@ -1,0 +1,72 @@
+#!/usr/bin/env zsh
+
+# Publishes the current release artifact to the radiostreamer-downloads R2
+# bucket: the versioned zip plus a regenerated latest.json manifest. The site
+# worker maps /download/macos.zip to whatever latest.json names, so these two
+# uploads are the whole release publish step.
+#
+# Usage: publish-site-download [--optional]
+#   --optional  Exit successfully when no release artifact exists (used by
+#               the worker deploy script so deploys work without a release).
+
+builtin emulate -L zsh
+setopt ERR_EXIT
+setopt NO_UNSET
+setopt PIPE_FAIL
+
+local script_home=${0:A:h}
+local project_root=${script_home:h:h}
+local worker_dir=${project_root}/worker
+local bucket='radiostreamer-downloads'
+
+local -i optional=0
+if [[ ${1:-} == '--optional' ]] optional=1
+
+local product_name product_version
+read -r product_name product_version <<< \
+  "$(jq -r '. | {name, version} | join(" ")' ${project_root}/buildspec.json)"
+
+local zip_name="${product_name}-${product_version}-macos-arm64.zip"
+local zip_path=${project_root}/release/${zip_name}
+
+if [[ ! -f ${zip_path} ]] {
+  if (( optional )) {
+    print "No release artifact at release/${zip_name}; skipping download publish."
+    exit 0
+  }
+  print -u2 "error: release artifact not found: ${zip_path}"
+  print -u2 "Run the build and package scripts first."
+  exit 2
+}
+
+local size sha256
+size=$(stat -f%z ${zip_path})
+sha256=$(shasum -a 256 ${zip_path} | cut -d' ' -f1)
+
+local manifest
+manifest=$(mktemp)
+trap "rm -f ${manifest}" EXIT
+
+cat > ${manifest} <<JSON
+{
+  "name": "${zip_name}",
+  "version": "${product_version}",
+  "platform": "macos",
+  "arch": "arm64",
+  "size": ${size},
+  "sha256": "${sha256}",
+  "url": "https://radiostreamer.app/download/${zip_name}",
+  "aliasUrl": "https://radiostreamer.app/download/macos.zip"
+}
+JSON
+
+print "Publishing ${zip_name} (${size} bytes, sha256 ${sha256}) to R2 bucket ${bucket}..."
+
+# wrangler r2 object put defaults to local simulated storage; --remote is
+# required to write to the real bucket.
+(cd ${worker_dir} && npx wrangler r2 object put "${bucket}/${zip_name}" \
+  --file ${zip_path} --content-type application/zip --remote)
+(cd ${worker_dir} && npx wrangler r2 object put "${bucket}/latest.json" \
+  --file ${manifest} --content-type application/json --remote)
+
+print "Done. https://radiostreamer.app/download/macos.zip now serves ${zip_name}."
