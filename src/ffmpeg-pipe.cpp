@@ -167,6 +167,7 @@ void FfmpegPipe::run()
 			continue;
 
 		if (process.state() != QProcess::Running) {
+			appendProcessOutput(process.readAll());
 			setFailure("FFmpeg exited before the radio stream was stopped.");
 			break;
 		}
@@ -257,6 +258,7 @@ bool FfmpegPipe::writeToProcess(QProcess &process, const char *data, size_t size
 	while (remaining > 0) {
 		const qint64 written = process.write(cursor, remaining);
 		if (written <= 0) {
+			appendProcessOutput(process.readAll());
 			setFailure(QString("Failed to %1: %2").arg(failurePrefix, process_error(process)));
 			return false;
 		}
@@ -265,6 +267,7 @@ bool FfmpegPipe::writeToProcess(QProcess &process, const char *data, size_t size
 		remaining -= written;
 
 		if (!process.waitForBytesWritten(WRITE_TIMEOUT_MS)) {
+			appendProcessOutput(process.readAll());
 			setFailure(QString("Timed out trying to %1: %2").arg(failurePrefix, process_error(process)));
 			return false;
 		}
