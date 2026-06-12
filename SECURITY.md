@@ -8,7 +8,7 @@ Security fixes are provided for the latest release only.
 
 Please do not open a public issue for a suspected vulnerability.
 
-Use GitHub's private vulnerability reporting for this repository when available, or email support@threethingsmedia.de with:
+Use GitHub's private vulnerability reporting for this repository when available, or email support@threethingsmedia.net with:
 
 - the affected version or commit
 - a concise summary of the issue
