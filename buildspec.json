@@ -1,27 +1,27 @@
 {
     "dependencies": {
         "obs-studio": {
-            "version": "31.1.1",
+            "version": "33.0.0",
             "baseUrl": "https://github.com/obsproject/obs-studio/archive/refs/tags",
             "label": "OBS sources",
             "hashes": {
-                "macos": "39751f067bacc13d44b116c5138491b5f1391f91516d3d590d874edd21292291"
+                "macos": "55c6767b209a00f1859b315bf977df907b19890d132723731e00fd589f6860c0"
             }
         },
         "prebuilt": {
-            "version": "2025-07-11",
+            "version": "2026-10-23",
             "baseUrl": "https://github.com/obsproject/obs-deps/releases/download",
             "label": "Pre-Built obs-deps",
             "hashes": {
-                "macos": "495687e63383d1a287684b6e2e9bfe246bb8f156fe265926afb1a325af1edd2a"
+                "macos": "6ded92c5d97f1d1b5effa07be13cc9f539826aa9c65013a15872328e39acffbf"
             }
         },
         "qt6": {
-            "version": "2025-07-11",
+            "version": "2026-10-23",
             "baseUrl": "https://github.com/obsproject/obs-deps/releases/download",
             "label": "Pre-Built Qt6",
             "hashes": {
-                "macos": "d3f5f04b6ea486e032530bdf0187cbda9a54e0a49621a4c8ba984c5023998867"
+                "macos": "b216560cea8497207f9fc350c713716fb84aec6b973bb0ff8ac6add7734abad5"
             }
         }
     },
@@ -32,7 +32,7 @@
     },
     "name": "radiostreamer",
     "displayName": "Radio Streamer",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "author": "Three Things Media",
     "website": "https://threethingsmedia.com",
     "email": "support@threethingsmedia.net"

@@ -18,7 +18,7 @@ Download the latest signed and notarized build from <https://radiostreamer.app/d
 
 ## Requirements
 
-- OBS Studio 31.x
+- OBS Studio 31.x or later (built and tested against OBS Studio 33.0.0)
 - Apple Silicon Mac
 - FFmpeg on `PATH`, `/opt/homebrew/bin/ffmpeg`, `/usr/local/bin/ffmpeg`, or `/usr/bin/ffmpeg`
 - For local builds: CMake 3.28+ and Xcode on macOS
