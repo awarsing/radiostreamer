@@ -83,4 +83,4 @@ Use a dedicated Icecast source password for the mount you stream to.
 
 ## License
 
-Radio Streamer is licensed under the GNU General Public License v2.0 or later. See [LICENSE](LICENSE).
+Radio Streamer is licensed under the GNU General Public License v3.0 or later. See [LICENSE](LICENSE).
