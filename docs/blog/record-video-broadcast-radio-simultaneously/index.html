@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Record Video and Broadcast Radio at the Same Time in OBS - Radio Streamer</title>
+<meta name="description" content="Record video to disk and broadcast a separate audio mount to Icecast at the same time, from one OBS instance. Architecture, setup, and workflow examples." />
+<meta name="keywords" content="OBS record and stream, OBS independent output, record video stream radio, OBS Icecast simultaneously, OBS multiple outputs, OBS twitch and radio" />
+<meta name="author" content="Three Things Media" />
+<meta name="theme-color" content="#ff8c2a" />
+<link rel="canonical" href="https://radiostreamer.app/blog/record-video-broadcast-radio-simultaneously/" />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Radio Streamer" />
+<meta property="og:title" content="Record Video and Broadcast Radio Simultaneously in OBS" />
+<meta property="og:description" content="Record video to disk and broadcast a separate audio mount to Icecast at the same time, from one OBS instance." />
+<meta property="og:url" content="https://radiostreamer.app/blog/record-video-broadcast-radio-simultaneously/" />
+<meta property="og:image" content="https://radiostreamer.app/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Radio Streamer dock in OBS Studio." />
+<meta property="og:locale" content="en_US" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Record Video and Broadcast Radio Simultaneously in OBS" />
+<meta name="twitter:description" content="Run a video recording, a Twitch stream, and an Icecast radio mount in parallel from one OBS." />
+<meta name="twitter:image" content="https://radiostreamer.app/og.png" />
+<meta name="twitter:image:alt" content="Radio Streamer dock in OBS Studio." />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Record video and broadcast radio at the same time in OBS",
+  "description": "How to run a local video recording, an external video stream, and an Icecast radio audio mount simultaneously from one OBS instance using Radio Streamer.",
+  "url": "https://radiostreamer.app/blog/record-video-broadcast-radio-simultaneously/",
+  "image": "https://radiostreamer.app/og.png",
+  "inLanguage": "en",
+  "datePublished": "2026-05-08",
+  "dateModified": "2026-05-08",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Radio Streamer",
+    "url": "https://radiostreamer.app/"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Three Things Media",
+    "url": "https://radiostreamer.app/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Three Things Media",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://radiostreamer.app/logo.png"
+    }
+  },
+  "about": [
+    { "@type": "Thing", "name": "OBS Studio" },
+    { "@type": "Thing", "name": "Icecast" },
+    { "@type": "Thing", "name": "Simulcasting" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://radiostreamer.app/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://radiostreamer.app/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Record video and broadcast radio at the same time in OBS", "item": "https://radiostreamer.app/blog/record-video-broadcast-radio-simultaneously/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Can OBS record video and stream to Icecast at the same time?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Out of the box, OBS's main output goes to one destination at a time. The Radio Streamer plugin adds a second, independent audio output that can broadcast to Icecast in parallel with OBS recording video locally or streaming to Twitch or YouTube."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does running Radio Streamer slow down OBS recording?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Radio Streamer's encoder runs in a separate FFmpeg process and the audio callback uses a pre-allocated ring buffer, so it does not allocate memory or lock a mutex on the OBS audio thread. Typical CPU overhead is under one percent."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I broadcast radio while streaming to Twitch?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. OBS's main output handles Twitch (or YouTube, RTMP, recording) and Radio Streamer handles the Icecast mount as a separate output. They do not share an encoder and do not stall each other."
+      }
+    }
+  ]
+}
+</script>
+
+<!-- BEGIN inline site styles -->
+<style>
+/* Radio Streamer site styles. Dark by default, light via prefers-color-scheme. */
+
+:root {
+  --bg: #0e0d0c;
+  --bg-2: #161412;
+  --panel: #1c1916;
+  --line: #2a2521;
+  --ink: #efe7dc;
+  --ink-dim: #a89e91;
+  --ink-mute: #6e6557;
+  --accent: #ff8c2a;
+  --accent-soft: #f0a85a;
+  --accent-rgb: 255, 140, 42;
+  --shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 60px -20px rgba(0,0,0,0.6);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #faf6ef;
+    --bg-2: #f1ebde;
+    --panel: #ffffff;
+    --line: #e6dfcd;
+    --ink: #2a2521;
+    --ink-dim: #6e6557;
+    --ink-mute: #a89e91;
+    --accent: #d96a14;
+    --accent-soft: #984500;
+    --accent-rgb: 217, 106, 20;
+    --shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 24px 60px -20px rgba(0,0,0,0.10);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(var(--accent-rgb), 0.12), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgba(var(--accent-rgb), 0.06), transparent 60%),
+    var(--bg);
+  color: var(--ink);
+  font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background:
+      radial-gradient(1200px 600px at 90% -10%, rgba(var(--accent-rgb), 0.07), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgba(var(--accent-rgb), 0.03), transparent 60%),
+      var(--bg);
+  }
+}
+
+a { color: var(--accent-soft); text-decoration: none; }
+a:hover { color: var(--accent); }
+code, pre, .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 13.5px;
+}
+
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+body.narrow main.wrap { max-width: 720px; }
+
+header.top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 24px;
+  max-width: 880px; margin: 0 auto;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: 0.01em; color: var(--ink); }
+.brand img { width: 28px; height: 28px; display: block; }
+.top nav a { color: var(--ink-dim); margin-left: 22px; font-size: 14px; }
+.top nav a:hover { color: var(--ink); }
+
+.hero { padding: 48px 0 28px; }
+body.thanks .hero { padding: 64px 0 28px; text-align: center; }
+body.thanks .hero .lede { margin-left: auto; margin-right: auto; }
+body.thanks .hero .cta-row { justify-content: center; }
+
+.pagehead { padding: 32px 0 12px; border-top: 0; }
+.pagehead h1 {
+  font-size: clamp(28px, 4.4vw, 40px);
+  line-height: 1.1;
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+
+.screenshot { margin: 36px 0 0; padding: 0; }
+.screenshot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: var(--shadow);
+}
+.screenshot figcaption {
+  margin-top: 10px;
+  color: var(--ink-mute);
+  font-size: 13px;
+  text-align: center;
+}
+.screenshot.product-shot img { border-radius: 6px; }
+
+.eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+}
+
+h1 {
+  font-size: clamp(36px, 6vw, 56px);
+  line-height: 1.05;
+  margin: 0 0 14px;
+  letter-spacing: -0.02em;
+}
+h1 em { font-style: normal; color: var(--accent); }
+body.thanks .hero h1 { font-size: clamp(36px, 6vw, 52px); }
+
+h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-mute);
+  margin: 0 0 18px;
+  font-weight: 600;
+}
+h3 {
+  margin: 18px 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.tagline {
+  font-size: 18px;
+  color: var(--ink-dim);
+  max-width: 60ch;
+  margin: 0 0 28px;
+}
+.lede { color: var(--ink-dim); margin: 0 0 8px; max-width: 60ch; }
+body.thanks .hero .lede {
+  font-size: 17px;
+  max-width: 56ch;
+  margin: 0 auto 28px;
+}
+.updated { color: var(--ink-mute); font-size: 13px; margin-top: 12px; }
+
+p { color: var(--ink-dim); margin: 0 0 12px; }
+ul, ol { color: var(--ink-dim); padding-left: 22px; margin: 8px 0 12px; }
+ul li, ol li { padding: 3px 0; }
+
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: transform 0.04s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: var(--accent);
+  color: #1a0e02;
+  box-shadow: 0 8px 24px -8px rgba(var(--accent-rgb), 0.55);
+}
+.btn-primary:hover { background: var(--accent-soft); color: #1a0e02; }
+.btn-ghost {
+  color: var(--ink);
+  border-color: var(--line);
+  background: transparent;
+}
+.btn-ghost:hover { border-color: var(--ink-mute); color: var(--ink); }
+
+.meta {
+  color: var(--ink-mute);
+  font-size: 13px;
+  margin-left: 4px;
+}
+
+section { padding: 36px 0; border-top: 1px solid var(--line); }
+section:first-of-type { border-top: 0; }
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 14px;
+}
+.feature {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.feature h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.feature p { margin: 0; color: var(--ink-dim); font-size: 14px; }
+@media (max-width: 640px) { .features { grid-template-columns: 1fr; } }
+
+pre {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  color: var(--ink);
+  margin: 12px 0;
+}
+body.support pre { white-space: pre-wrap; }
+
+code.inline {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+  color: var(--accent-soft);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+ul.plain { list-style: none; padding: 0; margin: 0; color: var(--ink-dim); }
+ul.plain li { padding: 6px 0; border-bottom: 1px dashed var(--line); }
+ul.plain li:last-child { border-bottom: 0; }
+
+.faq details {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+.faq details[open] { border-color: rgba(var(--accent-rgb), 0.25); }
+.faq summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  list-style: none;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: "+";
+  color: var(--accent);
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 400;
+}
+.faq details[open] summary::after { content: "\2212"; }
+.faq details p {
+  margin: 10px 0 0;
+  color: var(--ink-dim);
+  font-size: 14px;
+}
+
+.toc {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: var(--shadow);
+  margin: 12px 0 0;
+}
+.toc strong { display: block; color: var(--ink); margin-bottom: 6px; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; }
+.toc ul { list-style: none; padding: 0; margin: 0; }
+.toc li { padding: 3px 0; }
+
+.callout {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: var(--ink-dim);
+  box-shadow: var(--shadow);
+  margin: 12px 0;
+}
+.callout strong { color: var(--ink); }
+
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.45);
+  color: var(--accent);
+  font-size: 32px; line-height: 1;
+  margin-bottom: 22px;
+}
+
+footer {
+  color: var(--ink-mute);
+  font-size: 13px;
+  padding: 32px 0 56px;
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+}
+footer .row {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px;
+  max-width: 880px; margin: 0 auto; padding: 0 24px;
+}
+footer nav a { color: var(--ink-dim); margin-left: 16px; }
+footer nav a:first-child { margin-left: 0; }
+footer nav a:hover { color: var(--ink); }
+
+@media (max-width: 480px) {
+  .wrap { padding: 0 16px; }
+  body.narrow main.wrap { padding: 0 16px; }
+  footer .row { padding: 0 16px; }
+  header.top { padding: 18px 16px; }
+  .top nav a { margin-left: 14px; }
+  .hero { padding: 32px 0 20px; }
+  body.thanks .hero { padding: 40px 0 20px; }
+  footer nav a { margin-left: 12px; }
+}
+
+/* BEGIN generated optimization styles */
+.brand-logo {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+}
+.brand-logo img {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+.responsive-image {
+  display: block;
+}
+.screenshot .responsive-image {
+  width: 100%;
+}
+.post-thumb .responsive-image {
+  width: 100%;
+  height: 100%;
+}
+/* END generated optimization styles */
+</style>
+<!-- END inline site styles -->
+</head>
+<body class="narrow">
+
+<header class="top">
+  <a class="brand" href="/"><picture class="brand-logo"><source srcset="/logo-28.webp 1x, /logo-56.webp 2x" type="image/webp" /><img src="/logo.png" alt="" width="28" height="28" /></picture> Radio Streamer</a>
+  <nav>
+    <a href="/#features">Features</a>
+    <a href="/docs/">Docs</a>
+    <a href="/support/">Support</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section class="pagehead">
+    <span class="eyebrow">Workflow</span>
+    <h1>Record video and broadcast radio at the same time in OBS</h1>
+    <p class="lede">OBS's main output goes to one destination at a time. With Radio Streamer added, you get a second independent output that does not compete with the main encoder.</p>
+    <p class="updated">Published 2026-05-08 / 9 minute read</p>
+  </section>
+
+  <figure class="screenshot" style="margin: 12px 0;">
+    <picture class="responsive-image"><source srcset="featured.webp" type="image/webp" /><img src="featured.jpg" alt="Close-up of a sound mixing console" width="1600" height="1067" /></picture>
+    <figcaption>Photo: The HQ Miami Recording Studio on Unsplash</figcaption>
+  </figure>
+
+  <section>
+    <h2>The problem most users hit</h2>
+    <p>OBS Studio's main output, by default, sends one thing somewhere. You can record video to disk, or you can stream it to Twitch, or you can stream it to YouTube. The "Start Streaming" button hands the encoded output to one destination. Switching destinations stops one to start the other.</p>
+    <p>For most workflows, that is fine. But there are real situations where you want more than one output happening simultaneously:</p>
+    <ul>
+      <li>A talk show producer streams the video portion to YouTube while broadcasting just the audio to an Icecast or AzuraCast station for radio listeners.</li>
+      <li>A musician records a performance to disk in pristine quality and broadcasts a compressed audio mix to a live Icecast mount for fans listening on phones.</li>
+      <li>A gaming streamer pushes video to Twitch and a separate stripped-down audio feed to a community Icecast server.</li>
+      <li>A podcaster records the multi-track session locally for editing and pushes the live mix to a station feed in real time.</li>
+    </ul>
+    <p>OBS handles two of those with built-in features (recording plus streaming work in parallel). It does not handle the radio audio piece without additional tooling.</p>
+  </section>
+
+  <section>
+    <h2>The architecture</h2>
+    <p>OBS internally has three relevant outputs:</p>
+    <ul>
+      <li><strong>Streaming output:</strong> the main encoder that pushes video plus audio to a single destination (Twitch, YouTube, RTMP, custom).</li>
+      <li><strong>Recording output:</strong> writes video plus audio to a local file. Already independent of streaming.</li>
+      <li><strong>Plugins.</strong> OBS plugins can register their own outputs that read from the same audio and video sources without competing for the main encoder.</li>
+    </ul>
+    <p><a href="/">Radio Streamer</a> registers as a third output that reads from one OBS audio track, encodes via FFmpeg, and pushes to an Icecast mount. It does not touch the streaming or recording outputs. All three run in parallel.</p>
+    <p>This architecture is the reason the plugin exists. Hijacking the recording or streaming output to push to Icecast (a pattern some old guides recommend) ties up the main encoder. Radio Streamer leaves both free.</p>
+  </section>
+
+  <section>
+    <h2>Step-by-step setup</h2>
+    <ol>
+      <li><strong>Install Radio Streamer.</strong> Follow the <a href="/docs/#install">install steps</a> if it is not already in your OBS.</li>
+      <li><strong>Decide your audio strategy.</strong> Most of the time you want different audio mixes for the video output and the radio output. If you want them identical, route every source to both Track 1 and Track 2.</li>
+      <li><strong>Configure tracks.</strong> Open OBS, then <code class="inline">Audio Mixer</code> &gt; gear icon on a source &gt; <code class="inline">Advanced Audio Properties</code>. For each source, check the tracks it should appear on. Track 1 is conventional for video stream; Track 2 for radio.</li>
+      <li><strong>Set your video stream output to use Track 1.</strong> Open <code class="inline">Settings</code> &gt; <code class="inline">Output</code> &gt; <code class="inline">Streaming</code>. Under "Audio Track", pick Track 1.</li>
+      <li><strong>Set your recording to whatever tracks you want preserved.</strong> Recording can include multiple tracks if you choose <code class="inline">Settings</code> &gt; <code class="inline">Output</code> &gt; <code class="inline">Recording</code> with type "MKV" or "fMP4".</li>
+      <li><strong>Configure Radio Streamer.</strong> Open <code class="inline">Docks &gt; Radio Streamer</code>. Set the Icecast URL, codec, bitrate, and pick Track 2 in the audio track selector.</li>
+      <li><strong>Start everything.</strong> In any order. Each output is independent.</li>
+    </ol>
+  </section>
+
+  <figure class="screenshot" style="margin: 12px 0;">
+    <picture class="responsive-image"><source srcset="mid.webp" type="image/webp" /><img src="mid.jpg" alt="A person performing live wearing a face mask" width="1600" height="1067" loading="lazy" /></picture>
+    <figcaption>Photo: Ritupon Baishya on Unsplash</figcaption>
+  </figure>
+
+  <section>
+    <h2>Audio routing strategy</h2>
+    <p>The OBS audio mixer assigns each source to one or more tracks. For a parallel video-and-radio setup, the routing usually looks like this:</p>
+    <ul>
+      <li><strong>Mic:</strong> Track 1 + Track 2 (you want voice in both the video stream and the radio).</li>
+      <li><strong>Music player:</strong> Track 1 + Track 2 (same).</li>
+      <li><strong>Game audio (if you have it):</strong> Track 1 only (irrelevant or distracting on radio).</li>
+      <li><strong>Caller audio (if you have it):</strong> Track 1 + Track 2.</li>
+      <li><strong>Soundboard / sound effects:</strong> Track 1 only, unless they are part of the radio show.</li>
+    </ul>
+    <p>The principle: the video stream usually wants <em>everything</em>, the radio wants <em>just the show</em>. Stripping non-essential audio from Track 2 keeps the radio mix clean.</p>
+  </section>
+
+  <section>
+    <h2>Verifying both pipelines run independently</h2>
+    <p>Three quick checks confirm the outputs really are independent:</p>
+    <ol>
+      <li>Start the radio broadcast first. Do not start the video stream. Confirm Icecast shows a live source on the mount.</li>
+      <li>Start the video stream while the radio is live. The radio mount should not flicker or drop. Twitch or YouTube should come up normally.</li>
+      <li>Stop the video stream. The radio mount stays connected. Listeners do not hear a gap.</li>
+    </ol>
+    <p>If any of these steps interrupts the radio mount, something is wrong with the setup, usually because OBS is configured to use the same audio device for both pipelines and the device gets seized when one starts. The Track 2 separation should prevent this.</p>
+  </section>
+
+  <section>
+    <h2>Workflow examples</h2>
+    <h3>Twitch streamer with a community radio side channel</h3>
+    <p>Track 1 carries everything (mic, game audio, music). Track 2 carries mic and music only. OBS streams Track 1 to Twitch as part of the main video output. Radio Streamer pushes Track 2 to <code class="inline">icecast://source:pass@radio.example.com:8000/community.mp3</code>. Game audio stays out of the radio mount.</p>
+    <h3>Podcast video plus radio simulcast</h3>
+    <p>Two hosts on camera, video recorded locally with Track 1 (full mix). Track 2 carries just host mics. OBS records the video to MKV. Radio Streamer pushes Track 2 to AzuraCast. The recorded MKV becomes the YouTube upload later; the live Icecast mount goes out in real time.</p>
+    <h3>Music performance with parallel high-quality recording</h3>
+    <p>Track 1 has the full performance mix from a connected mixing board. Track 2 has the same mix but already downmixed to stereo. OBS records Track 1 in lossless WAV via the recording output. Radio Streamer pushes Track 2 as Opus at 96 kbps for the live audience. The recording becomes the album later; the broadcast goes out now.</p>
+  </section>
+
+  <section>
+    <h2>Common mistakes</h2>
+    <h3>Same source on the wrong track</h3>
+    <p>The most frequent issue is forgetting to route the radio-relevant sources to Track 2. The Icecast mount connects, but listeners hear silence because Track 2 has nothing on it. Open <code class="inline">Advanced Audio Properties</code> and confirm at least one source has Track 2 checked.</p>
+    <h3>Track monitoring confusion</h3>
+    <p>OBS's "Audio Monitoring" controls which audio you hear in your headphones, not what gets sent to outputs. Setting a source to "Monitor Only" means it is not in any track. For radio, set to "Monitor and Output" if you also want to hear it locally.</p>
+    <h3>Trying to stream from the recording output</h3>
+    <p>Some old guides recommend pointing OBS's recording output at an FFmpeg pipe configured for Icecast. That works in a narrow sense but ties up the recording pipeline; you cannot also record locally. Radio Streamer exists to avoid this tradeoff.</p>
+  </section>
+
+  <section>
+    <h2>Wrap up</h2>
+    <p>Once routing is set up, running three pipelines in parallel feels normal. Recording stays local, the video stream goes to one destination, and the radio mount goes to Icecast or AzuraCast. The encoder pipelines are isolated, so starting or stopping one never disturbs the others.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/">Get Radio Streamer</a>
+      <a class="btn btn-ghost" href="/blog/multi-track-obs-audio-radio-mix/">Multi-track audio guide</a>
+      <a class="btn btn-ghost" href="/blog/">All guides</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="row">
+    <div>Radio Streamer / Licensed under GPL v3.0 or later.</div>
+    <nav>
+      <a href="/docs/">Docs</a>
+      <a href="/blog/">Blog</a>
+      <a href="/support/">Support</a>
+      <a href="/tip-jar/">Tip Jar</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="https://github.com/awarsing/radiostreamer">GitHub</a>
+      <a href="https://github.com/awarsing/radiostreamer/blob/main/LICENSE">License</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

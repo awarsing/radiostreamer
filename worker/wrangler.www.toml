@@ -1,0 +1,7 @@
+name = "radiostreamer-www-redirect"
+main = "src/www-redirect.ts"
+compatibility_date = "2026-05-01"
+
+[[routes]]
+pattern = "www.radiostreamer.app"
+custom_domain = true
