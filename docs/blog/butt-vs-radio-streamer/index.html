@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BUTT vs Radio Streamer - Honest Comparison - Radio Streamer</title>
+<meta name="description" content="Honest comparison of BUTT (Broadcast Using This Tool) and Radio Streamer for streaming audio to Icecast. Features, tradeoffs, and which one fits your workflow." />
+<meta name="keywords" content="BUTT vs Radio Streamer, OBS Icecast source comparison, butt alternative, Broadcast Using This Tool, OBS plugin Icecast, Icecast source client" />
+<meta name="author" content="Three Things Media" />
+<meta name="theme-color" content="#ff8c2a" />
+<link rel="canonical" href="https://radiostreamer.app/blog/butt-vs-radio-streamer/" />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Radio Streamer" />
+<meta property="og:title" content="BUTT vs Radio Streamer - Honest Comparison" />
+<meta property="og:description" content="Honest comparison of BUTT and Radio Streamer for Icecast broadcasting. Features, tradeoffs, and which one fits your workflow." />
+<meta property="og:url" content="https://radiostreamer.app/blog/butt-vs-radio-streamer/" />
+<meta property="og:image" content="https://radiostreamer.app/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Radio Streamer dock in OBS Studio." />
+<meta property="og:locale" content="en_US" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="BUTT vs Radio Streamer - Honest Comparison" />
+<meta name="twitter:description" content="Honest comparison of BUTT and Radio Streamer for Icecast broadcasting." />
+<meta name="twitter:image" content="https://radiostreamer.app/og.png" />
+<meta name="twitter:image:alt" content="Radio Streamer dock in OBS Studio." />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "BUTT vs Radio Streamer: an honest comparison",
+  "description": "Side-by-side comparison of BUTT and Radio Streamer for broadcasting audio to Icecast servers, covering features, tradeoffs, and use cases.",
+  "url": "https://radiostreamer.app/blog/butt-vs-radio-streamer/",
+  "image": "https://radiostreamer.app/og.png",
+  "inLanguage": "en",
+  "datePublished": "2026-05-08",
+  "dateModified": "2026-05-08",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Radio Streamer",
+    "url": "https://radiostreamer.app/"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Three Things Media",
+    "url": "https://radiostreamer.app/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Three Things Media",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://radiostreamer.app/logo.png"
+    }
+  },
+  "about": [
+    { "@type": "Thing", "name": "BUTT (Broadcast Using This Tool)" },
+    { "@type": "Thing", "name": "Radio Streamer" },
+    { "@type": "Thing", "name": "Icecast" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://radiostreamer.app/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://radiostreamer.app/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "BUTT vs Radio Streamer", "item": "https://radiostreamer.app/blog/butt-vs-radio-streamer/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Should I use BUTT or Radio Streamer to broadcast to Icecast?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "If your audio production already lives in OBS, use Radio Streamer because it integrates the broadcast into the OBS workflow. If you do not use OBS, or you are on Windows or Linux, use BUTT. Both are free and open source."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Radio Streamer a fork of BUTT?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. They are independent projects with different shapes. BUTT is a standalone Qt application that reads from system audio devices. Radio Streamer is an OBS Studio plugin that reads from OBS audio tracks. Both publish to Icecast, but the architecture is different."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I run BUTT and Radio Streamer at the same time?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. They are independent processes pushing to different (or even the same) Icecast servers. There is no conflict between them. Some operators do exactly this: BUTT for a music-only mount, Radio Streamer for a live-show mount that comes from OBS."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Radio Streamer support song metadata like BUTT does?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not in 1.0. BUTT pushes Icecast2 ICY metadata (current song title and artist), which is useful for now-playing displays. Radio Streamer focuses on the audio path; metadata is on the roadmap."
+      }
+    }
+  ]
+}
+</script>
+
+<style>
+  .compare {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  .compare th, .compare td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  .compare th {
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .compare td:first-child { color: var(--ink); font-weight: 500; }
+  .compare td { color: var(--ink-dim); }
+</style>
+<!-- BEGIN inline site styles -->
+<style>
+/* Radio Streamer site styles. Dark by default, light via prefers-color-scheme. */
+
+:root {
+  --bg: #0e0d0c;
+  --bg-2: #161412;
+  --panel: #1c1916;
+  --line: #2a2521;
+  --ink: #efe7dc;
+  --ink-dim: #a89e91;
+  --ink-mute: #6e6557;
+  --accent: #ff8c2a;
+  --accent-soft: #f0a85a;
+  --accent-rgb: 255, 140, 42;
+  --shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 60px -20px rgba(0,0,0,0.6);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #faf6ef;
+    --bg-2: #f1ebde;
+    --panel: #ffffff;
+    --line: #e6dfcd;
+    --ink: #2a2521;
+    --ink-dim: #6e6557;
+    --ink-mute: #a89e91;
+    --accent: #d96a14;
+    --accent-soft: #984500;
+    --accent-rgb: 217, 106, 20;
+    --shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 24px 60px -20px rgba(0,0,0,0.10);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(var(--accent-rgb), 0.12), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgba(var(--accent-rgb), 0.06), transparent 60%),
+    var(--bg);
+  color: var(--ink);
+  font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background:
+      radial-gradient(1200px 600px at 90% -10%, rgba(var(--accent-rgb), 0.07), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgba(var(--accent-rgb), 0.03), transparent 60%),
+      var(--bg);
+  }
+}
+
+a { color: var(--accent-soft); text-decoration: none; }
+a:hover { color: var(--accent); }
+code, pre, .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 13.5px;
+}
+
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+body.narrow main.wrap { max-width: 720px; }
+
+header.top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 24px;
+  max-width: 880px; margin: 0 auto;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: 0.01em; color: var(--ink); }
+.brand img { width: 28px; height: 28px; display: block; }
+.top nav a { color: var(--ink-dim); margin-left: 22px; font-size: 14px; }
+.top nav a:hover { color: var(--ink); }
+
+.hero { padding: 48px 0 28px; }
+body.thanks .hero { padding: 64px 0 28px; text-align: center; }
+body.thanks .hero .lede { margin-left: auto; margin-right: auto; }
+body.thanks .hero .cta-row { justify-content: center; }
+
+.pagehead { padding: 32px 0 12px; border-top: 0; }
+.pagehead h1 {
+  font-size: clamp(28px, 4.4vw, 40px);
+  line-height: 1.1;
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+
+.screenshot { margin: 36px 0 0; padding: 0; }
+.screenshot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: var(--shadow);
+}
+.screenshot figcaption {
+  margin-top: 10px;
+  color: var(--ink-mute);
+  font-size: 13px;
+  text-align: center;
+}
+.screenshot.product-shot img { border-radius: 6px; }
+
+.eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+}
+
+h1 {
+  font-size: clamp(36px, 6vw, 56px);
+  line-height: 1.05;
+  margin: 0 0 14px;
+  letter-spacing: -0.02em;
+}
+h1 em { font-style: normal; color: var(--accent); }
+body.thanks .hero h1 { font-size: clamp(36px, 6vw, 52px); }
+
+h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-mute);
+  margin: 0 0 18px;
+  font-weight: 600;
+}
+h3 {
+  margin: 18px 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.tagline {
+  font-size: 18px;
+  color: var(--ink-dim);
+  max-width: 60ch;
+  margin: 0 0 28px;
+}
+.lede { color: var(--ink-dim); margin: 0 0 8px; max-width: 60ch; }
+body.thanks .hero .lede {
+  font-size: 17px;
+  max-width: 56ch;
+  margin: 0 auto 28px;
+}
+.updated { color: var(--ink-mute); font-size: 13px; margin-top: 12px; }
+
+p { color: var(--ink-dim); margin: 0 0 12px; }
+ul, ol { color: var(--ink-dim); padding-left: 22px; margin: 8px 0 12px; }
+ul li, ol li { padding: 3px 0; }
+
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: transform 0.04s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: var(--accent);
+  color: #1a0e02;
+  box-shadow: 0 8px 24px -8px rgba(var(--accent-rgb), 0.55);
+}
+.btn-primary:hover { background: var(--accent-soft); color: #1a0e02; }
+.btn-ghost {
+  color: var(--ink);
+  border-color: var(--line);
+  background: transparent;
+}
+.btn-ghost:hover { border-color: var(--ink-mute); color: var(--ink); }
+
+.meta {
+  color: var(--ink-mute);
+  font-size: 13px;
+  margin-left: 4px;
+}
+
+section { padding: 36px 0; border-top: 1px solid var(--line); }
+section:first-of-type { border-top: 0; }
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 14px;
+}
+.feature {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.feature h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.feature p { margin: 0; color: var(--ink-dim); font-size: 14px; }
+@media (max-width: 640px) { .features { grid-template-columns: 1fr; } }
+
+pre {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  color: var(--ink);
+  margin: 12px 0;
+}
+body.support pre { white-space: pre-wrap; }
+
+code.inline {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+  color: var(--accent-soft);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+ul.plain { list-style: none; padding: 0; margin: 0; color: var(--ink-dim); }
+ul.plain li { padding: 6px 0; border-bottom: 1px dashed var(--line); }
+ul.plain li:last-child { border-bottom: 0; }
+
+.faq details {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+.faq details[open] { border-color: rgba(var(--accent-rgb), 0.25); }
+.faq summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  list-style: none;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: "+";
+  color: var(--accent);
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 400;
+}
+.faq details[open] summary::after { content: "\2212"; }
+.faq details p {
+  margin: 10px 0 0;
+  color: var(--ink-dim);
+  font-size: 14px;
+}
+
+.toc {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: var(--shadow);
+  margin: 12px 0 0;
+}
+.toc strong { display: block; color: var(--ink); margin-bottom: 6px; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; }
+.toc ul { list-style: none; padding: 0; margin: 0; }
+.toc li { padding: 3px 0; }
+
+.callout {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: var(--ink-dim);
+  box-shadow: var(--shadow);
+  margin: 12px 0;
+}
+.callout strong { color: var(--ink); }
+
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.45);
+  color: var(--accent);
+  font-size: 32px; line-height: 1;
+  margin-bottom: 22px;
+}
+
+footer {
+  color: var(--ink-mute);
+  font-size: 13px;
+  padding: 32px 0 56px;
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+}
+footer .row {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px;
+  max-width: 880px; margin: 0 auto; padding: 0 24px;
+}
+footer nav a { color: var(--ink-dim); margin-left: 16px; }
+footer nav a:first-child { margin-left: 0; }
+footer nav a:hover { color: var(--ink); }
+
+@media (max-width: 480px) {
+  .wrap { padding: 0 16px; }
+  body.narrow main.wrap { padding: 0 16px; }
+  footer .row { padding: 0 16px; }
+  header.top { padding: 18px 16px; }
+  .top nav a { margin-left: 14px; }
+  .hero { padding: 32px 0 20px; }
+  body.thanks .hero { padding: 40px 0 20px; }
+  footer nav a { margin-left: 12px; }
+}
+
+/* BEGIN generated optimization styles */
+.brand-logo {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+}
+.brand-logo img {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+.responsive-image {
+  display: block;
+}
+.screenshot .responsive-image {
+  width: 100%;
+}
+.post-thumb .responsive-image {
+  width: 100%;
+  height: 100%;
+}
+/* END generated optimization styles */
+</style>
+<!-- END inline site styles -->
+</head>
+<body class="narrow">
+
+<header class="top">
+  <a class="brand" href="/"><picture class="brand-logo"><source srcset="/logo-28.webp 1x, /logo-56.webp 2x" type="image/webp" /><img src="/logo.png" alt="" width="28" height="28" /></picture> Radio Streamer</a>
+  <nav>
+    <a href="/#features">Features</a>
+    <a href="/docs/">Docs</a>
+    <a href="/support/">Support</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section class="pagehead">
+    <span class="eyebrow">Comparison</span>
+    <h1>BUTT vs Radio Streamer: an honest comparison</h1>
+    <p class="lede">Both push audio to Icecast. They are built for different workflows, and the right pick depends almost entirely on whether you produce in OBS.</p>
+    <p class="updated">Published 2026-05-08 / 8 minute read</p>
+  </section>
+
+  <figure class="screenshot" style="margin: 12px 0;">
+    <picture class="responsive-image"><source srcset="featured.webp" type="image/webp" /><img src="featured.jpg" alt="Black and white audio mixer" width="1200" height="800" /></picture>
+    <figcaption>Photo: Michał Franczak on Unsplash</figcaption>
+  </figure>
+
+  <section>
+    <h2>The short answer</h2>
+    <ul>
+      <li>If your audio production already lives inside OBS, use <strong>Radio Streamer</strong>.</li>
+      <li>If you do not use OBS, or you are on Windows or Linux, use <strong>BUTT</strong>.</li>
+      <li>Both are free, open source, and GPL-licensed. Neither will lock you in.</li>
+    </ul>
+    <p>That is the call most people are looking for. The rest of this post is for readers who want the reasoning.</p>
+  </section>
+
+  <section>
+    <h2>What each one is</h2>
+    <h3>BUTT (Broadcast Using This Tool)</h3>
+    <p>A standalone Qt application maintained for over a decade. Reads from system audio inputs (your microphone, virtual cables, anything CoreAudio/ALSA/WASAPI exposes), encodes, and pushes to Icecast or Shoutcast. Has its own GUI with level meters, a small EQ, ICY metadata fields, and a long list of supported codecs. Runs on Windows, macOS, and Linux. The reference for "I just want to push audio to a radio server."</p>
+    <h3>Radio Streamer</h3>
+    <p>An OBS Studio plugin. Adds a dock that reads from any OBS audio track (1 through 6), encodes via FFmpeg, and pushes to Icecast. Lives inside OBS, reuses OBS's audio mixer, and keeps the broadcast independent of OBS's main video output. Currently macOS Apple Silicon only.</p>
+  </section>
+
+  <section>
+    <h2>Side-by-side</h2>
+    <table class="compare">
+      <thead>
+        <tr><th>Feature</th><th>BUTT</th><th>Radio Streamer</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Audio source</td><td>System audio devices</td><td>OBS audio tracks (1-6)</td></tr>
+        <tr><td>Runs as</td><td>Standalone app</td><td>OBS plugin (in-process)</td></tr>
+        <tr><td>Platforms</td><td>Windows, macOS, Linux</td><td>macOS Apple Silicon only (1.0)</td></tr>
+        <tr><td>Codecs</td><td>MP3, AAC, Opus, OGG, FLAC, WAV</td><td>MP3, AAC, Opus</td></tr>
+        <tr><td>Built-in EQ</td><td>Yes</td><td>No (use OBS audio filters)</td></tr>
+        <tr><td>ICY metadata push</td><td>Yes (song title and artist)</td><td>Not yet (on roadmap)</td></tr>
+        <tr><td>Independent of OBS main output</td><td>N/A (separate app)</td><td>Yes (key differentiator)</td></tr>
+        <tr><td>Reconnect on drop</td><td>Yes</td><td>Yes (2/5/10/20/30 seconds)</td></tr>
+        <tr><td>Audio routing</td><td>Picks one device or virtual cable</td><td>Picks one OBS track (already mixed)</td></tr>
+        <tr><td>Maturity</td><td>Released 2007, very stable</td><td>Released 2026, newer</td></tr>
+        <tr><td>License</td><td>GPLv2+</td><td>GPLv2+</td></tr>
+        <tr><td>Cost</td><td>Free</td><td>Free</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Pick BUTT if</h2>
+    <ul>
+      <li>You do not use OBS, and you do not plan to. A DJ-only rig pushing music or a microphone to Icecast is exactly what BUTT was built for.</li>
+      <li>You are on Windows or Linux. Radio Streamer's 1.0 is macOS only.</li>
+      <li>You need song metadata (ICY title/artist) for now-playing displays in your station.</li>
+      <li>You need codecs Radio Streamer does not support yet, like FLAC or AAC-HE.</li>
+      <li>You want a 20-year-mature tool with a deep user community and decades of accumulated documentation.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Pick Radio Streamer if</h2>
+    <ul>
+      <li>You already produce in OBS. Mics, music, call-in audio, soundboard cues are all routed in OBS's mixer. Radio Streamer reads any of that as a track.</li>
+      <li>You run video and radio at the same time. Record locally, stream to Twitch or YouTube on the main encoder, and broadcast a separate radio audio mount on the side, all from one OBS instance.</li>
+      <li>You want one app, one mixer, one workflow.</li>
+      <li>You are on macOS Apple Silicon.</li>
+      <li>You value sub-second startup. Radio Streamer optimizes for instant on-air time.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Things BUTT does that Radio Streamer does not (yet)</h2>
+    <ul>
+      <li><strong>ICY metadata push.</strong> Now-playing track info displayed on AzuraCast or your custom player. Radio Streamer plans to add this; it is not in 1.0.</li>
+      <li><strong>Built-in EQ.</strong> BUTT has parametric EQ in the app. Radio Streamer expects you to use OBS's audio filters (which are arguably more capable, but it is an extra step).</li>
+      <li><strong>Windows and Linux support.</strong> Planned, not shipping.</li>
+      <li><strong>FLAC, OGG Vorbis, WAV.</strong> Niche codecs that BUTT supports. Radio Streamer covers the three common ones (MP3, AAC, Opus) and not the long tail.</li>
+      <li><strong>Standalone use.</strong> If you are not running OBS, BUTT works; Radio Streamer does not.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Things Radio Streamer does that BUTT does not</h2>
+    <ul>
+      <li><strong>Lives inside OBS.</strong> No separate app to launch, no virtual cable to install, no second mixer to keep in sync.</li>
+      <li><strong>Reads OBS audio tracks directly.</strong> The same mixer routing you already use for video streaming feeds the radio output. No CoreAudio aggregate device gymnastics.</li>
+      <li><strong>Independent of the OBS main encoder.</strong> Recording to disk, streaming to Twitch, and broadcasting to Icecast are three independent pipelines. None of them stalls when another starts or stops.</li>
+      <li><strong>Sub-second activation.</strong> The plugin pre-allocates buffers and starts FFmpeg with explicit raw-pipe settings to skip the format probing that adds three or four seconds to most setups.</li>
+      <li><strong>Sanitized credentials in OBS logs.</strong> FFmpeg's stderr is filtered before it reaches the OBS log so the source URL password does not end up in support files.</li>
+    </ul>
+  </section>
+
+  <figure class="screenshot" style="margin: 12px 0;">
+    <picture class="responsive-image"><source srcset="mid.webp" type="image/webp" /><img src="mid.jpg" alt="Person wearing studio headphones" width="1600" height="1067" loading="lazy" /></picture>
+    <figcaption>Photo: Soundtrap on Unsplash</figcaption>
+  </figure>
+
+  <section>
+    <h2>Migration: BUTT to Radio Streamer</h2>
+    <p>If you are an OBS-using BUTT operator considering the move:</p>
+    <ol>
+      <li>Install <a href="/">Radio Streamer</a>.</li>
+      <li>Move your audio sources into OBS (mic, music player, call-in app) if they are not already there.</li>
+      <li>Use <code class="inline">Advanced Audio Properties</code> in OBS to route the radio-relevant sources to a dedicated track. Track 2 is conventional, leaving Track 1 for the main video stream's audio.</li>
+      <li>Open <code class="inline">Docks &gt; Radio Streamer</code>. Paste the same Icecast URL you used in BUTT. Pick the same codec and bitrate.</li>
+      <li>Click Start. Confirm the mount on your Icecast or AzuraCast dashboard.</li>
+      <li>Quit BUTT.</li>
+    </ol>
+    <p>The Icecast server does not know or care which client is pushing audio. As far as the listener is concerned, nothing changed.</p>
+  </section>
+
+  <section>
+    <h2>Honest tradeoffs</h2>
+    <p>Radio Streamer is newer than BUTT by about nineteen years. It does fewer things, ships fewer features, and runs on fewer platforms. None of that is a flaw; it is the cost of being focused. BUTT covers a wider surface area, and that surface area is genuinely valuable if you need it.</p>
+    <p>The case for Radio Streamer is not "it is better than BUTT." The case is "if you produce in OBS, the integration is worth more than any feature BUTT has that Radio Streamer lacks." If you do not produce in OBS, that argument does not apply, and BUTT is a fine choice.</p>
+    <p>There is also no shame in running both. A station can have one mount fed by BUTT during scheduled music programming and another mount fed by Radio Streamer during live shows produced in OBS. The Icecast server is happy.</p>
+  </section>
+
+  <section>
+    <h2>Wrap up</h2>
+    <p>Pick the tool that matches your workflow, not the one with the longer feature list or the bigger user count. Both BUTT and Radio Streamer are solid Icecast source clients. They just live in different places.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/">Try Radio Streamer</a>
+      <a class="btn btn-ghost" href="https://danielnoethen.de/butt/" rel="noopener" target="_blank">Get BUTT</a>
+      <a class="btn btn-ghost" href="/blog/">All guides</a>
+    </div>
+    <p style="margin-top: 16px;">Have a setup that does not fit either pattern? Open an issue on the <a href="https://github.com/awarsing/radiostreamer/issues" rel="noopener">GitHub repository</a>. Real-world workflow notes shape the roadmap.</p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="row">
+    <div>Radio Streamer / Licensed under GPL v3.0 or later.</div>
+    <nav>
+      <a href="/docs/">Docs</a>
+      <a href="/blog/">Blog</a>
+      <a href="/support/">Support</a>
+      <a href="/tip-jar/">Tip Jar</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="https://github.com/awarsing/radiostreamer">GitHub</a>
+      <a href="https://github.com/awarsing/radiostreamer/blob/main/LICENSE">License</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

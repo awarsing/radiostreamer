@@ -1,0 +1,47 @@
+# Radio Streamer
+
+> An OBS Studio plugin that adds a "Radio" dock for streaming audio-only to Icecast servers, without interrupting OBS's normal stream or recording.
+
+## What it is
+
+Radio Streamer is a free, open-source OBS Studio plugin (GPL v3.0+). It adds a dedicated dock with its own start/stop button so radio-style audio streaming runs alongside OBS's normal stream or recording. The plugin uses FFmpeg under the hood to publish to Icecast in MP3, AAC, or Opus.
+
+## Key facts
+
+- Platforms: macOS on Apple Silicon only.
+- Requires: OBS Studio 31.x or later (33.0.0 tested), FFmpeg with `libmp3lame`, `aac`, `libopus`, and the `icecast` protocol.
+- Codecs: MP3, AAC, Opus.
+- Audio source: any single OBS audio track (1-6).
+- Reconnect: optional, retries at 2, 5, 10, 20, 30 seconds.
+- License: GPL v3.0 or later.
+
+## URL format
+
+```
+icecast://source:password@server:port/mountpoint
+```
+
+The `server` portion can be either a raw IP address or a hostname like `radio.yourdomain.com`. Using a hostname requires a DNS A record pointing at the Icecast server's IP.
+
+## Links
+
+- [Homepage](https://radiostreamer.app/)
+- [Documentation](https://radiostreamer.app/docs/)
+- [Support](https://radiostreamer.app/support/)
+- [Tip Jar](https://radiostreamer.app/tip-jar/)
+- [Blog index](https://radiostreamer.app/blog/)
+- [Guide: How to stream audio from OBS to Icecast (3 methods compared)](https://radiostreamer.app/blog/how-to-stream-audio-from-obs-to-icecast/)
+- [Guide: Stream OBS audio to AzuraCast over Icecast](https://radiostreamer.app/blog/obs-to-azuracast/)
+- [Guide: Stream OBS audio to a self-hosted Icecast 2 server](https://radiostreamer.app/blog/obs-to-self-hosted-icecast/)
+- [Comparison: BUTT vs Radio Streamer](https://radiostreamer.app/blog/butt-vs-radio-streamer/)
+- [Guide: MP3 vs AAC vs Opus for Icecast streaming](https://radiostreamer.app/blog/mp3-vs-aac-vs-opus-icecast/)
+- [Guide: Record video and broadcast radio at the same time in OBS](https://radiostreamer.app/blog/record-video-broadcast-radio-simultaneously/)
+- [Guide: Multi-track OBS audio for a separate radio mix](https://radiostreamer.app/blog/multi-track-obs-audio-radio-mix/)
+- [Source on GitHub](https://github.com/awarsing/radiostreamer)
+- [Direct macOS zip download](https://radiostreamer.app/download/macos.zip)
+- [GitHub releases](https://github.com/awarsing/radiostreamer/releases/latest)
+- [GitHub Sponsors](https://github.com/sponsors/awarsing)
+
+## Funding
+
+Radio Streamer is free with no paid tier. Optional tips are accepted via Stripe Payment Link and GitHub Sponsors, both linked from the dedicated Tip Jar page. Tipping is voluntary and not required for any functionality.

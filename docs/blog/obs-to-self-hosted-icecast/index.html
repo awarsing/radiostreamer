@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stream OBS Audio to a Self-Hosted Icecast 2 Server - Radio Streamer</title>
+<meta name="description" content="Run your own Icecast 2 server and broadcast OBS audio directly to it. Server config, port setup, source URL format, and verification steps." />
+<meta name="keywords" content="OBS Icecast self-hosted, OBS Icecast 2, install Icecast server, icecast.xml setup, OBS Icecast source URL, self-host internet radio" />
+<meta name="author" content="Three Things Media" />
+<meta name="theme-color" content="#ff8c2a" />
+<link rel="canonical" href="https://radiostreamer.app/blog/obs-to-self-hosted-icecast/" />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Radio Streamer" />
+<meta property="og:title" content="Stream OBS Audio to a Self-Hosted Icecast 2 Server" />
+<meta property="og:description" content="Run your own Icecast 2 server and broadcast OBS audio directly to it. Setup, config, and verification." />
+<meta property="og:url" content="https://radiostreamer.app/blog/obs-to-self-hosted-icecast/" />
+<meta property="og:image" content="https://radiostreamer.app/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Radio Streamer dock in OBS Studio." />
+<meta property="og:locale" content="en_US" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Stream OBS Audio to a Self-Hosted Icecast 2 Server" />
+<meta name="twitter:description" content="Run your own Icecast 2 server and broadcast OBS audio directly to it." />
+<meta name="twitter:image" content="https://radiostreamer.app/og.png" />
+<meta name="twitter:image:alt" content="Radio Streamer dock in OBS Studio." />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Stream OBS audio to a self-hosted Icecast 2 server",
+  "description": "End-to-end setup for running your own Icecast 2 server and broadcasting OBS audio directly to it with the Radio Streamer plugin.",
+  "url": "https://radiostreamer.app/blog/obs-to-self-hosted-icecast/",
+  "image": "https://radiostreamer.app/og.png",
+  "inLanguage": "en",
+  "datePublished": "2026-05-08",
+  "dateModified": "2026-05-08",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Radio Streamer",
+    "url": "https://radiostreamer.app/"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Three Things Media",
+    "url": "https://radiostreamer.app/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Three Things Media",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://radiostreamer.app/logo.png"
+    }
+  },
+  "about": [
+    { "@type": "Thing", "name": "Icecast" },
+    { "@type": "Thing", "name": "OBS Studio" },
+    { "@type": "Thing", "name": "Self-hosted streaming" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://radiostreamer.app/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://radiostreamer.app/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Stream OBS audio to a self-hosted Icecast 2 server", "item": "https://radiostreamer.app/blog/obs-to-self-hosted-icecast/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Self-host Icecast 2 and broadcast OBS audio to it",
+  "description": "Install Icecast 2, edit the config, open the source port, and configure Radio Streamer in OBS to broadcast.",
+  "totalTime": "PT30M",
+  "tool": [
+    { "@type": "HowToTool", "name": "A server (VPS or local) for running Icecast 2" },
+    { "@type": "HowToTool", "name": "Icecast 2.4 or later" },
+    { "@type": "HowToTool", "name": "OBS Studio 31.x with Radio Streamer plugin" }
+  ],
+  "step": [
+    { "@type": "HowToStep", "position": 1, "name": "Install Icecast 2", "text": "Install Icecast on your server: brew install icecast on macOS, apt install icecast2 on Debian/Ubuntu, or run the moul/icecast Docker image." },
+    { "@type": "HowToStep", "position": 2, "name": "Edit icecast.xml", "text": "Set hostname, source-password, admin-password, and port. Restart Icecast." },
+    { "@type": "HowToStep", "position": 3, "name": "Open the source port", "text": "Allow inbound TCP on the source port (8000 by default) in your cloud security group and any host firewall." },
+    { "@type": "HowToStep", "position": 4, "name": "Build the source URL", "text": "Combine icecast://source:password@host:port/mountpoint into the URL Radio Streamer will use." },
+    { "@type": "HowToStep", "position": 5, "name": "Configure Radio Streamer in OBS", "text": "Open Docks > Radio Streamer, paste the URL, pick a codec, bitrate, and audio track, then click Start." },
+    { "@type": "HowToStep", "position": 6, "name": "Verify the live source", "text": "Open the Icecast admin panel at /admin/ and confirm the source mount is connected. Open the mount URL in a browser to hear the audio." }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Do I need a public IP to run Icecast?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Only if listeners outside your network need to connect. For local-only listening (LAN, on the same Mac), 127.0.0.1 or your LAN IP is fine. For public listeners, you need a reachable public IP plus an open port on any firewall in front of the server."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Icecast 2 require a specific port?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Port 8000 is conventional but arbitrary. Pick any free TCP port and set it in icecast.xml. Sources and listeners must use the same port. Some hosts block 8000 by default, so 8443 or 8888 are common alternates."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I run Icecast at home behind a residential router?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes for LAN streaming. For public listeners you need a port forward on the router, a reachable IP (or a dynamic DNS service), and you should expect intermittent reliability since residential ISPs often throttle or rotate addresses. A $5/month VPS is usually less hassle for public broadcasting."
+      }
+    }
+  ]
+}
+</script>
+
+<!-- BEGIN inline site styles -->
+<style>
+/* Radio Streamer site styles. Dark by default, light via prefers-color-scheme. */
+
+:root {
+  --bg: #0e0d0c;
+  --bg-2: #161412;
+  --panel: #1c1916;
+  --line: #2a2521;
+  --ink: #efe7dc;
+  --ink-dim: #a89e91;
+  --ink-mute: #6e6557;
+  --accent: #ff8c2a;
+  --accent-soft: #f0a85a;
+  --accent-rgb: 255, 140, 42;
+  --shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 60px -20px rgba(0,0,0,0.6);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #faf6ef;
+    --bg-2: #f1ebde;
+    --panel: #ffffff;
+    --line: #e6dfcd;
+    --ink: #2a2521;
+    --ink-dim: #6e6557;
+    --ink-mute: #a89e91;
+    --accent: #d96a14;
+    --accent-soft: #984500;
+    --accent-rgb: 217, 106, 20;
+    --shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 24px 60px -20px rgba(0,0,0,0.10);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(var(--accent-rgb), 0.12), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgba(var(--accent-rgb), 0.06), transparent 60%),
+    var(--bg);
+  color: var(--ink);
+  font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background:
+      radial-gradient(1200px 600px at 90% -10%, rgba(var(--accent-rgb), 0.07), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgba(var(--accent-rgb), 0.03), transparent 60%),
+      var(--bg);
+  }
+}
+
+a { color: var(--accent-soft); text-decoration: none; }
+a:hover { color: var(--accent); }
+code, pre, .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 13.5px;
+}
+
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+body.narrow main.wrap { max-width: 720px; }
+
+header.top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 24px;
+  max-width: 880px; margin: 0 auto;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: 0.01em; color: var(--ink); }
+.brand img { width: 28px; height: 28px; display: block; }
+.top nav a { color: var(--ink-dim); margin-left: 22px; font-size: 14px; }
+.top nav a:hover { color: var(--ink); }
+
+.hero { padding: 48px 0 28px; }
+body.thanks .hero { padding: 64px 0 28px; text-align: center; }
+body.thanks .hero .lede { margin-left: auto; margin-right: auto; }
+body.thanks .hero .cta-row { justify-content: center; }
+
+.pagehead { padding: 32px 0 12px; border-top: 0; }
+.pagehead h1 {
+  font-size: clamp(28px, 4.4vw, 40px);
+  line-height: 1.1;
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+
+.screenshot { margin: 36px 0 0; padding: 0; }
+.screenshot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: var(--shadow);
+}
+.screenshot figcaption {
+  margin-top: 10px;
+  color: var(--ink-mute);
+  font-size: 13px;
+  text-align: center;
+}
+.screenshot.product-shot img { border-radius: 6px; }
+
+.eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+}
+
+h1 {
+  font-size: clamp(36px, 6vw, 56px);
+  line-height: 1.05;
+  margin: 0 0 14px;
+  letter-spacing: -0.02em;
+}
+h1 em { font-style: normal; color: var(--accent); }
+body.thanks .hero h1 { font-size: clamp(36px, 6vw, 52px); }
+
+h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-mute);
+  margin: 0 0 18px;
+  font-weight: 600;
+}
+h3 {
+  margin: 18px 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.tagline {
+  font-size: 18px;
+  color: var(--ink-dim);
+  max-width: 60ch;
+  margin: 0 0 28px;
+}
+.lede { color: var(--ink-dim); margin: 0 0 8px; max-width: 60ch; }
+body.thanks .hero .lede {
+  font-size: 17px;
+  max-width: 56ch;
+  margin: 0 auto 28px;
+}
+.updated { color: var(--ink-mute); font-size: 13px; margin-top: 12px; }
+
+p { color: var(--ink-dim); margin: 0 0 12px; }
+ul, ol { color: var(--ink-dim); padding-left: 22px; margin: 8px 0 12px; }
+ul li, ol li { padding: 3px 0; }
+
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: transform 0.04s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: var(--accent);
+  color: #1a0e02;
+  box-shadow: 0 8px 24px -8px rgba(var(--accent-rgb), 0.55);
+}
+.btn-primary:hover { background: var(--accent-soft); color: #1a0e02; }
+.btn-ghost {
+  color: var(--ink);
+  border-color: var(--line);
+  background: transparent;
+}
+.btn-ghost:hover { border-color: var(--ink-mute); color: var(--ink); }
+
+.meta {
+  color: var(--ink-mute);
+  font-size: 13px;
+  margin-left: 4px;
+}
+
+section { padding: 36px 0; border-top: 1px solid var(--line); }
+section:first-of-type { border-top: 0; }
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 14px;
+}
+.feature {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.feature h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.feature p { margin: 0; color: var(--ink-dim); font-size: 14px; }
+@media (max-width: 640px) { .features { grid-template-columns: 1fr; } }
+
+pre {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  color: var(--ink);
+  margin: 12px 0;
+}
+body.support pre { white-space: pre-wrap; }
+
+code.inline {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+  color: var(--accent-soft);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+ul.plain { list-style: none; padding: 0; margin: 0; color: var(--ink-dim); }
+ul.plain li { padding: 6px 0; border-bottom: 1px dashed var(--line); }
+ul.plain li:last-child { border-bottom: 0; }
+
+.faq details {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+.faq details[open] { border-color: rgba(var(--accent-rgb), 0.25); }
+.faq summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  list-style: none;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: "+";
+  color: var(--accent);
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 400;
+}
+.faq details[open] summary::after { content: "\2212"; }
+.faq details p {
+  margin: 10px 0 0;
+  color: var(--ink-dim);
+  font-size: 14px;
+}
+
+.toc {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: var(--shadow);
+  margin: 12px 0 0;
+}
+.toc strong { display: block; color: var(--ink); margin-bottom: 6px; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; }
+.toc ul { list-style: none; padding: 0; margin: 0; }
+.toc li { padding: 3px 0; }
+
+.callout {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: var(--ink-dim);
+  box-shadow: var(--shadow);
+  margin: 12px 0;
+}
+.callout strong { color: var(--ink); }
+
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.45);
+  color: var(--accent);
+  font-size: 32px; line-height: 1;
+  margin-bottom: 22px;
+}
+
+footer {
+  color: var(--ink-mute);
+  font-size: 13px;
+  padding: 32px 0 56px;
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+}
+footer .row {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px;
+  max-width: 880px; margin: 0 auto; padding: 0 24px;
+}
+footer nav a { color: var(--ink-dim); margin-left: 16px; }
+footer nav a:first-child { margin-left: 0; }
+footer nav a:hover { color: var(--ink); }
+
+@media (max-width: 480px) {
+  .wrap { padding: 0 16px; }
+  body.narrow main.wrap { padding: 0 16px; }
+  footer .row { padding: 0 16px; }
+  header.top { padding: 18px 16px; }
+  .top nav a { margin-left: 14px; }
+  .hero { padding: 32px 0 20px; }
+  body.thanks .hero { padding: 40px 0 20px; }
+  footer nav a { margin-left: 12px; }
+}
+
+/* BEGIN generated optimization styles */
+.brand-logo {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+}
+.brand-logo img {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+.responsive-image {
+  display: block;
+}
+.screenshot .responsive-image {
+  width: 100%;
+}
+.post-thumb .responsive-image {
+  width: 100%;
+  height: 100%;
+}
+/* END generated optimization styles */
+</style>
+<!-- END inline site styles -->
+</head>
+<body class="narrow">
+
+<header class="top">
+  <a class="brand" href="/"><picture class="brand-logo"><source srcset="/logo-28.webp 1x, /logo-56.webp 2x" type="image/webp" /><img src="/logo.png" alt="" width="28" height="28" /></picture> Radio Streamer</a>
+  <nav>
+    <a href="/#features">Features</a>
+    <a href="/docs/">Docs</a>
+    <a href="/support/">Support</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section class="pagehead">
+    <span class="eyebrow">Guide</span>
+    <h1>Stream OBS audio to a self-hosted Icecast 2 server</h1>
+    <p class="lede">Skip the managed platforms. Run Icecast yourself, point Radio Streamer at it, and broadcast on your own terms. The whole setup fits in a $5/month VPS.</p>
+    <p class="updated">Published 2026-05-08 / 12 minute read</p>
+  </section>
+
+  <figure class="screenshot" style="margin: 12px 0;">
+    <picture class="responsive-image"><source srcset="featured.webp" type="image/webp" /><img src="featured.jpg" alt="Black laptop on a desk" width="1200" height="800" /></picture>
+    <figcaption>Photo: Jametlene Reskp on Unsplash</figcaption>
+  </figure>
+
+  <section>
+    <h2>Why self-host Icecast</h2>
+    <p>Managed Icecast platforms are easy and there is nothing wrong with them. AzuraCast, Centova Cast, and Sonix all wrap Icecast with a friendly UI and handle hosting for you. But when you self-host, you get a few real advantages:</p>
+    <ul>
+      <li><strong>Cost.</strong> A small VPS at Hetzner, DigitalOcean, or Linode runs Icecast for $5 a month and supports hundreds of concurrent listeners.</li>
+      <li><strong>Control.</strong> Mount points, listener limits, listener auth, fallback chains, and TLS are all yours to configure.</li>
+      <li><strong>Privacy.</strong> No third party sees your listener traffic.</li>
+      <li><strong>Simplicity for a single-source rig.</strong> Icecast is a few hundred KB binary with one config file. For one OBS rig pushing one mount, AzuraCast is overkill.</li>
+    </ul>
+    <p>This guide covers the end-to-end path: install Icecast, configure it, open the port, and point <a href="/">Radio Streamer</a> in OBS at the result.</p>
+  </section>
+
+  <section>
+    <h2>What you need</h2>
+    <ul>
+      <li>A server. A $5 VPS works fine for a few hundred listeners. A local Mac on your LAN works for testing.</li>
+      <li>Icecast 2.4 or later. (Icecast 2.5 is current as of 2026.)</li>
+      <li>OBS Studio 31.x with the <a href="/">Radio Streamer plugin</a> installed (<a href="/docs/#install">install steps</a>).</li>
+      <li>An open inbound TCP port on the server (8000 is the convention).</li>
+      <li>Optional: a hostname pointed at the server. Raw IP works for testing.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Step 1: Install Icecast 2</h2>
+    <p>Pick the install method that matches your server.</p>
+    <h3>macOS (Homebrew)</h3>
+<pre>brew install icecast</pre>
+    <p>Config file: <code class="inline">/opt/homebrew/etc/icecast.xml</code></p>
+    <h3>Debian / Ubuntu</h3>
+<pre>sudo apt install icecast2</pre>
+    <p>Config file: <code class="inline">/etc/icecast2/icecast.xml</code>. The installer will prompt for initial passwords; you can change them later.</p>
+    <h3>Docker (any host)</h3>
+<pre>docker run -d --name icecast \
+  -p 8000:8000 \
+  -e ICECAST_SOURCE_PASSWORD=hunter2 \
+  -e ICECAST_ADMIN_PASSWORD=changeme \
+  -e ICECAST_HOSTNAME=radio.example.com \
+  moul/icecast</pre>
+    <p>Override the bundled config by mounting your own <code class="inline">icecast.xml</code> into the container.</p>
+  </section>
+
+  <section>
+    <h2>Step 2: Edit icecast.xml</h2>
+    <p>Most of the default config is fine. The fields that matter:</p>
+    <ul>
+      <li><code class="inline">&lt;hostname&gt;</code>: your server's hostname or IP. Used to construct admin and listener URLs.</li>
+      <li><code class="inline">&lt;source-password&gt;</code>: anyone with this password can broadcast. Use a strong, unique value.</li>
+      <li><code class="inline">&lt;admin-password&gt;</code>: gives access to /admin/. Use a different strong password.</li>
+      <li><code class="inline">&lt;listen-socket&gt;&lt;port&gt;</code>: usually 8000.</li>
+    </ul>
+    <p>Minimum working snippet:</p>
+<pre>&lt;icecast&gt;
+  &lt;hostname&gt;radio.example.com&lt;/hostname&gt;
+  &lt;listen-socket&gt;
+    &lt;port&gt;8000&lt;/port&gt;
+  &lt;/listen-socket&gt;
+  &lt;authentication&gt;
+    &lt;source-password&gt;hunter2&lt;/source-password&gt;
+    &lt;admin-user&gt;admin&lt;/admin-user&gt;
+    &lt;admin-password&gt;changeme&lt;/admin-password&gt;
+  &lt;/authentication&gt;
+&lt;/icecast&gt;</pre>
+    <p>Mounts auto-create when a source connects. If you want a pre-configured mount with listener limits, add a block:</p>
+<pre>&lt;mount type="default"&gt;
+  &lt;mount-name&gt;/live.mp3&lt;/mount-name&gt;
+  &lt;max-listeners&gt;200&lt;/max-listeners&gt;
+  &lt;public&gt;1&lt;/public&gt;
+&lt;/mount&gt;</pre>
+  </section>
+
+  <section>
+    <h2>Step 3: Start Icecast and open the port</h2>
+    <p>Start the service:</p>
+<pre>brew services start icecast              # macOS
+sudo systemctl enable --now icecast2     # Debian/Ubuntu</pre>
+    <p>Confirm it is running locally:</p>
+<pre>curl -I http://localhost:8000/</pre>
+    <p>You should get a 200 response.</p>
+    <p>Now make sure port 8000 is reachable from your OBS Mac:</p>
+    <ul>
+      <li><strong>Cloud security group:</strong> allow inbound TCP 8000 from your IP (or 0.0.0.0/0 for public).</li>
+      <li><strong>Host firewall:</strong> <code class="inline">sudo ufw allow 8000/tcp</code> on Ubuntu.</li>
+      <li><strong>Residential router:</strong> port-forward 8000 to your local Icecast box.</li>
+    </ul>
+    <p>Test from a different network:</p>
+<pre>curl -I http://radio.example.com:8000/</pre>
+  </section>
+
+  <section>
+    <h2>Step 4: Build the Icecast source URL</h2>
+    <p>The format Radio Streamer (and FFmpeg under the hood) accepts:</p>
+<pre>icecast://username:password@host:port/mountpoint</pre>
+    <p>For a self-hosted Icecast, the username is conventionally <code class="inline">source</code> and the password is whatever you set as <code class="inline">&lt;source-password&gt;</code>:</p>
+<pre>icecast://source:hunter2@radio.example.com:8000/live.mp3</pre>
+    <p>The mount path can be anything. The file extension should match the codec you broadcast with: <code class="inline">.mp3</code> for MP3, <code class="inline">.aac</code> for AAC, <code class="inline">.opus</code> or <code class="inline">.ogg</code> for Opus. Mismatched codec and mount returns a 4xx error.</p>
+    <p>URL-encode special characters in the password. <code class="inline">@</code> becomes <code class="inline">%40</code>, <code class="inline">:</code> becomes <code class="inline">%3A</code>, <code class="inline">#</code> becomes <code class="inline">%23</code>.</p>
+  </section>
+
+  <section>
+    <h2>Step 5: Configure Radio Streamer in OBS</h2>
+    <ol>
+      <li>Open OBS Studio.</li>
+      <li>Open <code class="inline">Docks &gt; Radio Streamer</code>. Enable the dock if it is hidden.</li>
+      <li>Paste the source URL into the URL field.</li>
+      <li>Pick a codec matching the mount extension and a sensible bitrate (128 kbps for talk, 192 kbps for music).</li>
+      <li>Pick the OBS audio track that carries your radio mix. Track 2 is the conventional choice (mic, music, and call-in routed to it via <code class="inline">Advanced Audio Properties</code>, while Track 1 carries the main video stream's audio).</li>
+      <li>Enable Reconnect.</li>
+      <li>Click Start.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Step 6: Verify</h2>
+    <ul>
+      <li>Open <code class="inline">http://radio.example.com:8000/</code> in a browser. You should see the public Icecast status page with your mount listed.</li>
+      <li>Open <code class="inline">http://radio.example.com:8000/admin/</code>, log in with admin credentials, and confirm the active source is shown.</li>
+      <li>Open the mount URL directly: <code class="inline">http://radio.example.com:8000/live.mp3</code>. The browser plays the live stream.</li>
+    </ul>
+    <p>If the source connects but listeners hear nothing, the OBS audio track you selected has no sources routed to it. Open <code class="inline">Audio Mixer</code> in OBS, click the gear, choose <code class="inline">Advanced Audio Properties</code>, and confirm at least one source has the chosen track checked.</p>
+  </section>
+
+  <figure class="screenshot" style="margin: 12px 0;">
+    <picture class="responsive-image"><source srcset="mid.webp" type="image/webp" /><img src="mid.jpg" alt="A person working at a laptop in a production space" width="1600" height="1067" loading="lazy" /></picture>
+    <figcaption>Photo: Emediong Umoh on Unsplash</figcaption>
+  </figure>
+
+  <section>
+    <h2>Common gotchas</h2>
+    <h3>icecast.xml syntax errors prevent the service from starting</h3>
+    <p>Run Icecast directly with the config file path to see the parse error:</p>
+<pre>icecast -c /opt/homebrew/etc/icecast.xml</pre>
+    <h3>401 Unauthorized when Radio Streamer connects</h3>
+    <p>Wrong source password, or special characters not URL-encoded. Test the same credentials with butt or ezstream first to isolate the issue.</p>
+    <h3>Connection refused or timeout</h3>
+    <p>Icecast is running but the port is firewalled. Walk through cloud security group, host firewall, and (if applicable) router port-forward in order. <code class="inline">curl -v http://host:port/</code> from outside the server tells you which layer is blocking.</p>
+    <h3>SELinux on RHEL/Fedora denies the bind</h3>
+    <p><code class="inline">sudo setsebool -P httpd_can_network_connect on</code> or run Icecast in a more permissive context.</p>
+  </section>
+
+  <section>
+    <h2>Going further</h2>
+    <ul>
+      <li><strong>TLS via reverse proxy.</strong> Caddy is the simplest way: one block in Caddyfile gives you https://radio.example.com/ with auto-renewing certs proxied to Icecast. Source connections still use plain Icecast on 8000; only listener URLs become HTTPS.</li>
+      <li><strong>Listener auth.</strong> Define a mount with <code class="inline">&lt;authentication type="htpasswd"&gt;</code> if you want gated streams.</li>
+      <li><strong>Liquidsoap fallback.</strong> Run Liquidsoap in front of Icecast to auto-rotate music when no source is live, then hand off to OBS when you go on air.</li>
+      <li><strong>Move to AzuraCast later.</strong> If you outgrow plain Icecast, the <a href="/blog/obs-to-azuracast/">AzuraCast walkthrough</a> covers the same OBS side, just pointed at AzuraCast's source mount.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Wrap up</h2>
+    <p>The whole setup is about thirty minutes the first time, then under a minute for any future Icecast you spin up. The OBS side does not care whether the server is yours, AzuraCast, or anything else Icecast-compatible.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/">Get Radio Streamer</a>
+      <a class="btn btn-ghost" href="/docs/">Read the docs</a>
+      <a class="btn btn-ghost" href="/blog/">All guides</a>
+    </div>
+    <p style="margin-top: 16px;">Found a step that needs updating? Open an issue on the <a href="https://github.com/awarsing/radiostreamer/issues" rel="noopener">GitHub repository</a>.</p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="row">
+    <div>Radio Streamer / Licensed under GPL v3.0 or later.</div>
+    <nav>
+      <a href="/docs/">Docs</a>
+      <a href="/blog/">Blog</a>
+      <a href="/support/">Support</a>
+      <a href="/tip-jar/">Tip Jar</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="https://github.com/awarsing/radiostreamer">GitHub</a>
+      <a href="https://github.com/awarsing/radiostreamer/blob/main/LICENSE">License</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

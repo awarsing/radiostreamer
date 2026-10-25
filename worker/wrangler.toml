@@ -1,0 +1,17 @@
+name = "radiostreamer"
+main = "src/index.ts"
+compatibility_date = "2026-05-01"
+
+[[routes]]
+pattern = "radiostreamer.app"
+custom_domain = true
+
+[assets]
+directory = "../docs"
+binding = "ASSETS"
+html_handling = "auto-trailing-slash"
+run_worker_first = true
+
+[[r2_buckets]]
+binding = "DOWNLOADS"
+bucket_name = "radiostreamer-downloads"

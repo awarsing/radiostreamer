@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How to Stream Audio from OBS to Icecast - Radio Streamer</title>
+<meta name="description" content="Three real ways to stream audio from OBS Studio to an Icecast server: the FFmpeg Custom Output hack, BUTT plus a virtual cable, and the Radio Streamer plugin. Honest comparison." />
+<meta name="keywords" content="how to stream audio from OBS to Icecast, OBS Icecast, OBS audio Icecast, OBS FFmpeg Icecast, OBS BUTT, OBS Custom Output Icecast, audio-only OBS streaming" />
+<meta name="author" content="Three Things Media" />
+<meta name="theme-color" content="#ff8c2a" />
+<link rel="canonical" href="https://radiostreamer.app/blog/how-to-stream-audio-from-obs-to-icecast/" />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Radio Streamer" />
+<meta property="og:title" content="How to Stream Audio from OBS to Icecast" />
+<meta property="og:description" content="Three real ways to send audio from OBS Studio to Icecast: the FFmpeg Custom Output hack, BUTT plus virtual cable, and the Radio Streamer plugin. Honest comparison." />
+<meta property="og:url" content="https://radiostreamer.app/blog/how-to-stream-audio-from-obs-to-icecast/" />
+<meta property="og:image" content="https://radiostreamer.app/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Radio Streamer dock in OBS Studio." />
+<meta property="og:locale" content="en_US" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="How to Stream Audio from OBS to Icecast" />
+<meta name="twitter:description" content="Three real ways to send audio from OBS to Icecast: FFmpeg Custom Output, BUTT plus virtual cable, and the Radio Streamer plugin." />
+<meta name="twitter:image" content="https://radiostreamer.app/og.png" />
+<meta name="twitter:image:alt" content="Radio Streamer dock in OBS Studio." />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "How to stream audio from OBS to Icecast",
+  "description": "Three real approaches to broadcasting OBS audio to an Icecast server: the FFmpeg Custom Output method, BUTT with a virtual cable, and the Radio Streamer plugin. Honest comparison and a recommended path.",
+  "url": "https://radiostreamer.app/blog/how-to-stream-audio-from-obs-to-icecast/",
+  "image": "https://radiostreamer.app/og.png",
+  "inLanguage": "en",
+  "datePublished": "2026-05-08",
+  "dateModified": "2026-05-08",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Radio Streamer",
+    "url": "https://radiostreamer.app/"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Three Things Media",
+    "url": "https://radiostreamer.app/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Three Things Media",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://radiostreamer.app/logo.png"
+    }
+  },
+  "about": [
+    { "@type": "Thing", "name": "OBS Studio" },
+    { "@type": "Thing", "name": "Icecast" },
+    { "@type": "Thing", "name": "Audio streaming" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://radiostreamer.app/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://radiostreamer.app/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "How to stream audio from OBS to Icecast", "item": "https://radiostreamer.app/blog/how-to-stream-audio-from-obs-to-icecast/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Stream audio from OBS to Icecast using the Radio Streamer plugin",
+  "description": "Set up the Radio Streamer plugin inside OBS Studio to broadcast audio-only to an Icecast server.",
+  "totalTime": "PT5M",
+  "tool": [
+    { "@type": "HowToTool", "name": "OBS Studio 31.x" },
+    { "@type": "HowToTool", "name": "Radio Streamer plugin" },
+    { "@type": "HowToTool", "name": "An Icecast 2 server with a configured mount" }
+  ],
+  "step": [
+    { "@type": "HowToStep", "position": 1, "name": "Install the plugin", "text": "Download the Radio Streamer plugin from radiostreamer.app and copy it into the OBS user plugin folder. Restart OBS." },
+    { "@type": "HowToStep", "position": 2, "name": "Open the dock", "text": "In OBS, open Docks > Radio Streamer to enable the dedicated audio-only broadcasting dock." },
+    { "@type": "HowToStep", "position": 3, "name": "Paste the Icecast URL", "text": "Enter your source URL in the format icecast://username:password@host:port/mountpoint." },
+    { "@type": "HowToStep", "position": 4, "name": "Pick codec, bitrate, and audio track", "text": "Select MP3, AAC, or Opus matching your mount extension, choose a bitrate, and select the OBS audio track to broadcast (Track 2 is conventional)." },
+    { "@type": "HowToStep", "position": 5, "name": "Click Start", "text": "Click Start in the dock. The status indicator switches to active when the connection succeeds." }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Can OBS Studio stream audio-only to Icecast natively?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not as a first-class feature. OBS's main streaming output expects video and is designed for RTMP destinations like Twitch and YouTube. Audio-only streaming to Icecast requires either a workaround using the recording output's FFmpeg Custom Output, an external source client like BUTT, or a plugin like Radio Streamer."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is the OBS FFmpeg Custom Output method still useful?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, on platforms where Radio Streamer is not yet available (currently macOS Apple Silicon only). It works on Windows, Linux, and Intel Macs. The trade-off is that it ties up the OBS recording output, so you cannot simultaneously record video to disk and broadcast to Icecast."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need to install a virtual audio cable to stream from OBS?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Only if you use an external source client like BUTT. Both the FFmpeg Custom Output method and the Radio Streamer plugin read directly from OBS's internal audio mixer and do not require a virtual cable."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which method preserves the ability to also record video locally?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Radio Streamer plugin. It registers an independent output that does not compete with the recording or streaming pipelines. The FFmpeg Custom Output method blocks the recording pipeline because it reuses it. The BUTT method does not affect OBS recording but adds an external app and a virtual audio cable."
+      }
+    }
+  ]
+}
+</script>
+
+<style>
+  .compare {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  .compare th, .compare td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  .compare th {
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .compare td:first-child { color: var(--ink); font-weight: 500; }
+  .compare td { color: var(--ink-dim); }
+</style>
+<!-- BEGIN inline site styles -->
+<style>
+/* Radio Streamer site styles. Dark by default, light via prefers-color-scheme. */
+
+:root {
+  --bg: #0e0d0c;
+  --bg-2: #161412;
+  --panel: #1c1916;
+  --line: #2a2521;
+  --ink: #efe7dc;
+  --ink-dim: #a89e91;
+  --ink-mute: #6e6557;
+  --accent: #ff8c2a;
+  --accent-soft: #f0a85a;
+  --accent-rgb: 255, 140, 42;
+  --shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 60px -20px rgba(0,0,0,0.6);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #faf6ef;
+    --bg-2: #f1ebde;
+    --panel: #ffffff;
+    --line: #e6dfcd;
+    --ink: #2a2521;
+    --ink-dim: #6e6557;
+    --ink-mute: #a89e91;
+    --accent: #d96a14;
+    --accent-soft: #984500;
+    --accent-rgb: 217, 106, 20;
+    --shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 24px 60px -20px rgba(0,0,0,0.10);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(var(--accent-rgb), 0.12), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgba(var(--accent-rgb), 0.06), transparent 60%),
+    var(--bg);
+  color: var(--ink);
+  font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background:
+      radial-gradient(1200px 600px at 90% -10%, rgba(var(--accent-rgb), 0.07), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgba(var(--accent-rgb), 0.03), transparent 60%),
+      var(--bg);
+  }
+}
+
+a { color: var(--accent-soft); text-decoration: none; }
+a:hover { color: var(--accent); }
+code, pre, .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 13.5px;
+}
+
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+body.narrow main.wrap { max-width: 720px; }
+
+header.top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 24px;
+  max-width: 880px; margin: 0 auto;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: 0.01em; color: var(--ink); }
+.brand img { width: 28px; height: 28px; display: block; }
+.top nav a { color: var(--ink-dim); margin-left: 22px; font-size: 14px; }
+.top nav a:hover { color: var(--ink); }
+
+.hero { padding: 48px 0 28px; }
+body.thanks .hero { padding: 64px 0 28px; text-align: center; }
+body.thanks .hero .lede { margin-left: auto; margin-right: auto; }
+body.thanks .hero .cta-row { justify-content: center; }
+
+.pagehead { padding: 32px 0 12px; border-top: 0; }
+.pagehead h1 {
+  font-size: clamp(28px, 4.4vw, 40px);
+  line-height: 1.1;
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+
+.screenshot { margin: 36px 0 0; padding: 0; }
+.screenshot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: var(--shadow);
+}
+.screenshot figcaption {
+  margin-top: 10px;
+  color: var(--ink-mute);
+  font-size: 13px;
+  text-align: center;
+}
+.screenshot.product-shot img { border-radius: 6px; }
+
+.eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+}
+
+h1 {
+  font-size: clamp(36px, 6vw, 56px);
+  line-height: 1.05;
+  margin: 0 0 14px;
+  letter-spacing: -0.02em;
+}
+h1 em { font-style: normal; color: var(--accent); }
+body.thanks .hero h1 { font-size: clamp(36px, 6vw, 52px); }
+
+h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-mute);
+  margin: 0 0 18px;
+  font-weight: 600;
+}
+h3 {
+  margin: 18px 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.tagline {
+  font-size: 18px;
+  color: var(--ink-dim);
+  max-width: 60ch;
+  margin: 0 0 28px;
+}
+.lede { color: var(--ink-dim); margin: 0 0 8px; max-width: 60ch; }
+body.thanks .hero .lede {
+  font-size: 17px;
+  max-width: 56ch;
+  margin: 0 auto 28px;
+}
+.updated { color: var(--ink-mute); font-size: 13px; margin-top: 12px; }
+
+p { color: var(--ink-dim); margin: 0 0 12px; }
+ul, ol { color: var(--ink-dim); padding-left: 22px; margin: 8px 0 12px; }
+ul li, ol li { padding: 3px 0; }
+
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: transform 0.04s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: var(--accent);
+  color: #1a0e02;
+  box-shadow: 0 8px 24px -8px rgba(var(--accent-rgb), 0.55);
+}
+.btn-primary:hover { background: var(--accent-soft); color: #1a0e02; }
+.btn-ghost {
+  color: var(--ink);
+  border-color: var(--line);
+  background: transparent;
+}
+.btn-ghost:hover { border-color: var(--ink-mute); color: var(--ink); }
+
+.meta {
+  color: var(--ink-mute);
+  font-size: 13px;
+  margin-left: 4px;
+}
+
+section { padding: 36px 0; border-top: 1px solid var(--line); }
+section:first-of-type { border-top: 0; }
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 14px;
+}
+.feature {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.feature h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.feature p { margin: 0; color: var(--ink-dim); font-size: 14px; }
+@media (max-width: 640px) { .features { grid-template-columns: 1fr; } }
+
+pre {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  color: var(--ink);
+  margin: 12px 0;
+}
+body.support pre { white-space: pre-wrap; }
+
+code.inline {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+  color: var(--accent-soft);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+ul.plain { list-style: none; padding: 0; margin: 0; color: var(--ink-dim); }
+ul.plain li { padding: 6px 0; border-bottom: 1px dashed var(--line); }
+ul.plain li:last-child { border-bottom: 0; }
+
+.faq details {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+.faq details[open] { border-color: rgba(var(--accent-rgb), 0.25); }
+.faq summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  list-style: none;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: "+";
+  color: var(--accent);
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 400;
+}
+.faq details[open] summary::after { content: "\2212"; }
+.faq details p {
+  margin: 10px 0 0;
+  color: var(--ink-dim);
+  font-size: 14px;
+}
+
+.toc {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: var(--shadow);
+  margin: 12px 0 0;
+}
+.toc strong { display: block; color: var(--ink); margin-bottom: 6px; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; }
+.toc ul { list-style: none; padding: 0; margin: 0; }
+.toc li { padding: 3px 0; }
+
+.callout {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: var(--ink-dim);
+  box-shadow: var(--shadow);
+  margin: 12px 0;
+}
+.callout strong { color: var(--ink); }
+
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.45);
+  color: var(--accent);
+  font-size: 32px; line-height: 1;
+  margin-bottom: 22px;
+}
+
+footer {
+  color: var(--ink-mute);
+  font-size: 13px;
+  padding: 32px 0 56px;
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+}
+footer .row {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px;
+  max-width: 880px; margin: 0 auto; padding: 0 24px;
+}
+footer nav a { color: var(--ink-dim); margin-left: 16px; }
+footer nav a:first-child { margin-left: 0; }
+footer nav a:hover { color: var(--ink); }
+
+@media (max-width: 480px) {
+  .wrap { padding: 0 16px; }
+  body.narrow main.wrap { padding: 0 16px; }
+  footer .row { padding: 0 16px; }
+  header.top { padding: 18px 16px; }
+  .top nav a { margin-left: 14px; }
+  .hero { padding: 32px 0 20px; }
+  body.thanks .hero { padding: 40px 0 20px; }
+  footer nav a { margin-left: 12px; }
+}
+
+/* BEGIN generated optimization styles */
+.brand-logo {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+}
+.brand-logo img {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+.responsive-image {
+  display: block;
+}
+.screenshot .responsive-image {
+  width: 100%;
+}
+.post-thumb .responsive-image {
+  width: 100%;
+  height: 100%;
+}
+/* END generated optimization styles */
+</style>
+<!-- END inline site styles -->
+</head>
+<body class="narrow">
+
+<header class="top">
+  <a class="brand" href="/"><picture class="brand-logo"><source srcset="/logo-28.webp 1x, /logo-56.webp 2x" type="image/webp" /><img src="/logo.png" alt="" width="28" height="28" /></picture> Radio Streamer</a>
+  <nav>
+    <a href="/#features">Features</a>
+    <a href="/docs/">Docs</a>
+    <a href="/support/">Support</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section class="pagehead">
+    <span class="eyebrow">Guide</span>
+    <h1>How to stream audio from OBS to Icecast</h1>
+    <p class="lede">OBS Studio does not have a first-class audio-only output to Icecast. There are three real approaches that work, with very different trade-offs. This is an honest comparison so you can pick the right one for your setup.</p>
+    <p class="updated">Published 2026-05-08 / 11 minute read</p>
+  </section>
+
+  <figure class="screenshot" style="margin: 12px 0;">
+    <picture class="responsive-image"><source srcset="featured.webp" type="image/webp" /><img src="featured.jpg" alt="Laptop displaying a music player" width="1600" height="1067" /></picture>
+    <figcaption>Photo: Sanjeev Nagaraj on Unsplash</figcaption>
+  </figure>
+
+  <section>
+    <h2>The short version</h2>
+    <p>Three methods exist. Pick by your situation:</p>
+    <ul>
+      <li><strong>OBS Recording + FFmpeg Custom Output:</strong> the legacy hack. Works without plugins or extra apps. Ties up the recording pipeline. Cross-platform.</li>
+      <li><strong>BUTT or another external source client + virtual audio cable:</strong> the standalone-app path. Mature, cross-platform, but adds an app, a kernel-level driver, and a routing layer outside OBS.</li>
+      <li><strong>Radio Streamer plugin:</strong> the dedicated dock. Lives inside OBS, reads OBS audio tracks directly, runs independently of recording or streaming. Currently macOS Apple Silicon only.</li>
+    </ul>
+    <p>If you produce in OBS on a Mac, jump to method 3. If you are on Windows or Linux, methods 1 or 2 apply for now.</p>
+  </section>
+
+  <section>
+    <h2>Method 1: OBS Recording output + FFmpeg Custom Output</h2>
+    <p>This is the method most older OBS forum posts recommend. It abuses the OBS recording output by pointing it at an Icecast URL through the FFmpeg Custom Output.</p>
+    <h3>How to set it up</h3>
+    <ol>
+      <li><code class="inline">Settings &gt; Output</code>. Set "Output Mode" to <strong>Advanced</strong>.</li>
+      <li>Open the <code class="inline">Recording</code> tab.</li>
+      <li>Set "Type" to <strong>Custom Output (FFmpeg)</strong>.</li>
+      <li>Set "FFmpeg Output Type" to <strong>Output to URL</strong>.</li>
+      <li>"File path or URL": <code class="inline">icecast://source:password@host:8000/live.mp3</code></li>
+      <li>"Container Format": <code class="inline">mp3</code> (or <code class="inline">adts</code> for AAC, <code class="inline">ogg</code> for Opus).</li>
+      <li>"Audio Encoder": <code class="inline">libmp3lame</code>, <code class="inline">aac</code>, or <code class="inline">libopus</code>.</li>
+      <li>Set "Audio Bitrate" to 128, 192, or whatever your mount expects.</li>
+      <li>Disable video by clearing "Video Encoder" or setting it to a dummy.</li>
+      <li>Click "Start Recording" to begin the broadcast.</li>
+    </ol>
+    <h3>What's wrong with it</h3>
+    <ul>
+      <li><strong>Recording is now your broadcast.</strong> You cannot also record video to disk; the recording output is consumed.</li>
+      <li><strong>The "Start Recording" button starts a broadcast.</strong> Easy to confuse, easy to forget you are live.</li>
+      <li><strong>No real reconnect logic.</strong> If Icecast drops, FFmpeg dies and the broadcast ends. There is no automatic retry.</li>
+      <li><strong>Disabling video cleanly is awkward.</strong> Some OBS versions still allocate video resources even when you set the encoder to none.</li>
+      <li><strong>FFmpeg credentials leak into OBS logs.</strong> Source URL passwords appear in the OBS log file, which gets pasted into bug reports.</li>
+    </ul>
+    <p>The method works. It was the only path for years. It is also the reason a dedicated plugin exists.</p>
+  </section>
+
+  <section>
+    <h2>Method 2: BUTT (or another external source client) plus a virtual audio cable</h2>
+    <p>BUTT (Broadcast Using This Tool) is a standalone Qt app that has shipped audio to Icecast since 2007. To use it with OBS audio, you need a virtual audio cable so BUTT can read what OBS is producing.</p>
+    <h3>How to set it up (macOS example)</h3>
+    <ol>
+      <li>Install <a href="https://existential.audio/blackhole/" rel="noopener" target="_blank">BlackHole</a> (free virtual audio driver) or <a href="https://rogueamoeba.com/loopback/" rel="noopener" target="_blank">Loopback</a> (paid, more features).</li>
+      <li>Create a multi-output device in macOS Audio MIDI Setup that routes to both your speakers and BlackHole.</li>
+      <li>In OBS, set "Audio Monitoring" on the relevant sources to "Monitor and Output" so the audio gets sent to the multi-output device.</li>
+      <li>Install <a href="https://danielnoethen.de/butt/" rel="noopener" target="_blank">BUTT</a>.</li>
+      <li>In BUTT, set the audio input device to BlackHole.</li>
+      <li>Configure BUTT's server settings with your Icecast credentials and codec.</li>
+      <li>Click Play in BUTT to broadcast.</li>
+    </ol>
+    <h3>What's wrong with it</h3>
+    <ul>
+      <li><strong>Two apps to manage.</strong> OBS plus BUTT plus the virtual driver. Three things that can fail independently.</li>
+      <li><strong>Audio routing happens outside OBS.</strong> BUTT reads from the OS audio device, not from OBS's mixer. Different mix per output is awkward.</li>
+      <li><strong>Virtual audio drivers add latency</strong>, usually 5 to 20 ms depending on driver and buffer settings. Tolerable for music, audible for tight live mixing.</li>
+      <li><strong>Kernel-level installation.</strong> BlackHole and Loopback both install audio drivers that require system extension permissions and a reboot.</li>
+      <li><strong>BUTT does not see your OBS scenes.</strong> Switching scenes in OBS does not signal anything to BUTT. The broadcast just keeps reading raw audio.</li>
+    </ul>
+    <p>BUTT itself is a great tool. The friction is the bridge between OBS and BUTT. For non-OBS workflows (a music DJ rig pushing to Icecast), BUTT alone is the right answer. <a href="/blog/butt-vs-radio-streamer/">More on BUTT vs Radio Streamer</a>.</p>
+  </section>
+
+  <figure class="screenshot" style="margin: 12px 0;">
+    <picture class="responsive-image"><source srcset="mid.webp" type="image/webp" /><img src="mid.jpg" alt="MacBook Pro on a wooden table" width="1600" height="1067" loading="lazy" /></picture>
+    <figcaption>Photo: Linpaul Rodney on Unsplash</figcaption>
+  </figure>
+
+  <section>
+    <h2>Method 3: Radio Streamer plugin (the dedicated dock)</h2>
+    <p>Radio Streamer is an OBS plugin that adds a dock with a single Icecast URL field, codec selector, bitrate, audio track selector, and start/stop controls. It reads from any OBS audio track directly and pushes to Icecast through FFmpeg, all in-process.</p>
+    <h3>What it solves</h3>
+    <ul>
+      <li><strong>No virtual audio cable.</strong> The plugin reads OBS audio tracks internally. No driver to install, no system-level routing.</li>
+      <li><strong>No second app.</strong> Configure the dock once and Start lives next to your scene controls.</li>
+      <li><strong>Independent output.</strong> Recording, streaming, and the radio mount run in parallel. None blocks any other.</li>
+      <li><strong>Reconnect built in.</strong> Optional automatic reconnect at 2, 5, 10, 20, then 30 seconds.</li>
+      <li><strong>Sub-second startup.</strong> The audio callback writes into a pre-allocated ring buffer; FFmpeg starts with explicit raw-pipe settings to skip format probing.</li>
+      <li><strong>Sanitized credentials in OBS logs.</strong> FFmpeg's stderr is filtered before it reaches the OBS log, so passwords do not leak into support files.</li>
+    </ul>
+    <h3>What it does not do (yet)</h3>
+    <ul>
+      <li>Windows or Linux. The 1.0 release is macOS Apple Silicon only.</li>
+      <li>ICY metadata push (now-playing track info). Planned, not shipped.</li>
+      <li>Codecs beyond MP3, AAC, and Opus.</li>
+    </ul>
+    <h3>Setup walkthrough</h3>
+    <ol>
+      <li><a href="/">Download the plugin</a> and copy <code class="inline">radiostreamer.plugin</code> into the OBS user plugin folder. Restart OBS.</li>
+      <li>Open <code class="inline">Docks &gt; Radio Streamer</code>.</li>
+      <li>Paste your Icecast URL: <code class="inline">icecast://source:password@host:port/mount.mp3</code></li>
+      <li>Pick codec (matching mount extension), bitrate, and audio track. Track 2 is the conventional pick if you also stream video on Track 1.</li>
+      <li>Enable Reconnect.</li>
+      <li>Click Start.</li>
+    </ol>
+    <p>Detailed docs: <a href="/docs/">radiostreamer.app/docs</a>. Platform-specific guides: <a href="/blog/obs-to-azuracast/">AzuraCast</a>, <a href="/blog/obs-to-self-hosted-icecast/">self-hosted Icecast</a>.</p>
+  </section>
+
+  <section>
+    <h2>Side-by-side comparison</h2>
+    <table class="compare">
+      <thead>
+        <tr><th>Aspect</th><th>OBS + FFmpeg Custom Output</th><th>BUTT + virtual cable</th><th>Radio Streamer plugin</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Setup effort</td><td>Medium (deep OBS settings)</td><td>High (3 things to install)</td><td>Low (1 plugin)</td></tr>
+        <tr><td>Apps required</td><td>OBS only</td><td>OBS + BUTT + virtual driver</td><td>OBS only</td></tr>
+        <tr><td>Reads from OBS audio</td><td>Yes (recording pipeline)</td><td>Indirect (via OS device)</td><td>Yes (direct, any track)</td></tr>
+        <tr><td>Can record video locally too</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>Can stream to Twitch too</td><td>Yes (separate pipeline)</td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>Reconnect on drop</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>Latency overhead</td><td>None extra</td><td>5 to 20 ms (virtual cable)</td><td>None extra</td></tr>
+        <tr><td>Credentials in OBS log</td><td>Visible</td><td>N/A (in BUTT logs only)</td><td>Sanitized</td></tr>
+        <tr><td>Platform support</td><td>Windows, macOS, Linux</td><td>Windows, macOS, Linux</td><td>macOS Apple Silicon (1.0)</td></tr>
+        <tr><td>Cost</td><td>Free</td><td>Free (BUTT, BlackHole)</td><td>Free, GPL</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Which method should I pick?</h2>
+    <h3>Use Radio Streamer if</h3>
+    <ul>
+      <li>You produce in OBS Studio on macOS Apple Silicon.</li>
+      <li>You want one app, one mixer, one workflow.</li>
+      <li>You record video and broadcast radio at the same time, or might soon.</li>
+      <li>You want sub-second activation and built-in reconnect.</li>
+    </ul>
+    <h3>Use FFmpeg Custom Output if</h3>
+    <ul>
+      <li>You are on Windows, Linux, or an Intel Mac (where Radio Streamer is not yet available).</li>
+      <li>You are not willing to install a separate app or a virtual driver.</li>
+      <li>You are fine giving up local video recording while broadcasting.</li>
+    </ul>
+    <h3>Use BUTT plus a virtual cable if</h3>
+    <ul>
+      <li>You need cross-platform support today and want a mature, well-known tool.</li>
+      <li>You also broadcast from non-OBS workflows and want one source client across them.</li>
+      <li>You need codecs beyond MP3, AAC, and Opus, like FLAC or AAC-HE.</li>
+      <li>You need ICY metadata (now-playing track) push.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>What about combining methods?</h2>
+    <p>You can run more than one. A station might use Radio Streamer for live shows produced in OBS and BUTT for unattended music programming on a different rig. Icecast supports many simultaneous mounts; nothing stops you from feeding them with different clients.</p>
+    <p>What does not combine well: running FFmpeg Custom Output and Radio Streamer on the same OBS instance and pointing both at the same Icecast mount. Icecast accepts only one source per mount, so the second connection gets rejected.</p>
+  </section>
+
+  <section>
+    <h2>Wrap up</h2>
+    <p>"How to stream audio from OBS to Icecast" looks like one question and is really three, depending on what platform you are on and what else OBS is doing for you. The honest ranking for an OBS-on-Mac setup is plugin first, FFmpeg Custom Output second, BUTT third. For Windows and Linux, the order flips: BUTT first, FFmpeg Custom Output second, Radio Streamer when it lands on those platforms.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/">Get Radio Streamer</a>
+      <a class="btn btn-ghost" href="/docs/">Read the docs</a>
+      <a class="btn btn-ghost" href="/blog/">All guides</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="row">
+    <div>Radio Streamer / Licensed under GPL v3.0 or later.</div>
+    <nav>
+      <a href="/docs/">Docs</a>
+      <a href="/blog/">Blog</a>
+      <a href="/support/">Support</a>
+      <a href="/tip-jar/">Tip Jar</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="https://github.com/awarsing/radiostreamer">GitHub</a>
+      <a href="https://github.com/awarsing/radiostreamer/blob/main/LICENSE">License</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

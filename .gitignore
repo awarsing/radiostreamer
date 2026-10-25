@@ -6,9 +6,11 @@
 !/build-aux
 !/cmake
 !/data
+!/docs
 !/src
 !/tests
 !/tests/**
+!/worker
 !.clang-format
 !.gersemirc
 !.gitignore
@@ -20,6 +22,11 @@
 !CONTRIBUTING.md
 !INSTALL.md
 !SECURITY.md
+
+# Exclude generated worker state and dependencies
+/worker/node_modules/
+/worker/.wrangler/
+/worker/.fallow/
 
 # Exclude lock files
 *.lock.json

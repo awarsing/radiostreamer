@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Radio Streamer Docs - OBS Icecast Plugin Setup on macOS</title>
+<meta name="description" content="Install, configure, and troubleshoot Radio Streamer for OBS Studio: a free macOS plugin for audio-only Icecast and AzuraCast streaming." />
+<meta name="keywords" content="Radio Streamer docs, OBS Icecast setup, OBS AzuraCast, install OBS plugin macOS, Icecast URL format, OBS audio streaming" />
+<meta name="author" content="Three Things Media" />
+<meta name="theme-color" content="#ff8c2a" />
+<link rel="canonical" href="https://radiostreamer.app/docs/" />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Radio Streamer" />
+<meta property="og:title" content="Radio Streamer Docs - OBS Icecast Plugin Setup on macOS" />
+<meta property="og:description" content="Install, configure, and troubleshoot Radio Streamer for OBS Studio on macOS." />
+<meta property="og:url" content="https://radiostreamer.app/docs/" />
+<meta property="og:image" content="https://radiostreamer.app/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Radio Streamer dock in OBS Studio." />
+<meta property="og:locale" content="en_US" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Radio Streamer Docs - OBS Icecast Plugin Setup on macOS" />
+<meta name="twitter:description" content="Install, configure, and troubleshoot Radio Streamer for OBS Studio on macOS." />
+<meta name="twitter:image" content="https://radiostreamer.app/og.png" />
+<meta name="twitter:image:alt" content="Radio Streamer dock in OBS Studio." />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Radio Streamer documentation",
+  "description": "Install, configure, and troubleshoot Radio Streamer for OBS Studio on macOS.",
+  "url": "https://radiostreamer.app/docs/",
+  "image": "https://radiostreamer.app/og.png",
+  "inLanguage": "en",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Radio Streamer",
+    "url": "https://radiostreamer.app/"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Three Things Media",
+    "url": "https://radiostreamer.app/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Three Things Media",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://radiostreamer.app/logo.png"
+    }
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://radiostreamer.app/" },
+    { "@type": "ListItem", "position": 2, "name": "Documentation", "item": "https://radiostreamer.app/docs/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Install Radio Streamer for OBS Studio on macOS",
+  "description": "Install the Radio Streamer plugin into OBS Studio on macOS Apple Silicon.",
+  "totalTime": "PT2M",
+  "tool": [
+    { "@type": "HowToTool", "name": "OBS Studio 31.x" },
+    { "@type": "HowToTool", "name": "FFmpeg with libmp3lame, aac, libopus, and the icecast protocol" }
+  ],
+  "step": [
+    { "@type": "HowToStep", "position": 1, "name": "Quit OBS", "text": "Close OBS Studio if it is currently running." },
+    { "@type": "HowToStep", "position": 2, "name": "Unzip the download", "text": "Unzip the Radio Streamer macOS download to reveal the radiostreamer.plugin bundle." },
+    { "@type": "HowToStep", "position": 3, "name": "Copy to OBS plugin folder", "text": "Copy radiostreamer.plugin into ~/Library/Application Support/obs-studio/plugins/." },
+    { "@type": "HowToStep", "position": 4, "name": "Restart OBS and enable the dock", "text": "Launch OBS Studio. Open Docks > Radio Streamer to enable the dock if it is not already visible." }
+  ]
+}
+</script>
+
+<!-- BEGIN inline site styles -->
+<style>
+/* Radio Streamer site styles. Dark by default, light via prefers-color-scheme. */
+
+:root {
+  --bg: #0e0d0c;
+  --bg-2: #161412;
+  --panel: #1c1916;
+  --line: #2a2521;
+  --ink: #efe7dc;
+  --ink-dim: #a89e91;
+  --ink-mute: #6e6557;
+  --accent: #ff8c2a;
+  --accent-soft: #f0a85a;
+  --accent-rgb: 255, 140, 42;
+  --shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 60px -20px rgba(0,0,0,0.6);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #faf6ef;
+    --bg-2: #f1ebde;
+    --panel: #ffffff;
+    --line: #e6dfcd;
+    --ink: #2a2521;
+    --ink-dim: #6e6557;
+    --ink-mute: #a89e91;
+    --accent: #d96a14;
+    --accent-soft: #984500;
+    --accent-rgb: 217, 106, 20;
+    --shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 24px 60px -20px rgba(0,0,0,0.10);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(var(--accent-rgb), 0.12), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgba(var(--accent-rgb), 0.06), transparent 60%),
+    var(--bg);
+  color: var(--ink);
+  font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background:
+      radial-gradient(1200px 600px at 90% -10%, rgba(var(--accent-rgb), 0.07), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgba(var(--accent-rgb), 0.03), transparent 60%),
+      var(--bg);
+  }
+}
+
+a { color: var(--accent-soft); text-decoration: none; }
+a:hover { color: var(--accent); }
+code, pre, .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 13.5px;
+}
+
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+body.narrow main.wrap { max-width: 720px; }
+
+header.top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 24px;
+  max-width: 880px; margin: 0 auto;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: 0.01em; color: var(--ink); }
+.brand img { width: 28px; height: 28px; display: block; }
+.top nav a { color: var(--ink-dim); margin-left: 22px; font-size: 14px; }
+.top nav a:hover { color: var(--ink); }
+
+.hero { padding: 48px 0 28px; }
+body.thanks .hero { padding: 64px 0 28px; text-align: center; }
+body.thanks .hero .lede { margin-left: auto; margin-right: auto; }
+body.thanks .hero .cta-row { justify-content: center; }
+
+.pagehead { padding: 32px 0 12px; border-top: 0; }
+.pagehead h1 {
+  font-size: clamp(28px, 4.4vw, 40px);
+  line-height: 1.1;
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+
+.screenshot { margin: 36px 0 0; padding: 0; }
+.screenshot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: var(--shadow);
+}
+.screenshot figcaption {
+  margin-top: 10px;
+  color: var(--ink-mute);
+  font-size: 13px;
+  text-align: center;
+}
+.screenshot.product-shot img { border-radius: 6px; }
+
+.eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+}
+
+h1 {
+  font-size: clamp(36px, 6vw, 56px);
+  line-height: 1.05;
+  margin: 0 0 14px;
+  letter-spacing: -0.02em;
+}
+h1 em { font-style: normal; color: var(--accent); }
+body.thanks .hero h1 { font-size: clamp(36px, 6vw, 52px); }
+
+h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-mute);
+  margin: 0 0 18px;
+  font-weight: 600;
+}
+h3 {
+  margin: 18px 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.tagline {
+  font-size: 18px;
+  color: var(--ink-dim);
+  max-width: 60ch;
+  margin: 0 0 28px;
+}
+.lede { color: var(--ink-dim); margin: 0 0 8px; max-width: 60ch; }
+body.thanks .hero .lede {
+  font-size: 17px;
+  max-width: 56ch;
+  margin: 0 auto 28px;
+}
+.updated { color: var(--ink-mute); font-size: 13px; margin-top: 12px; }
+
+p { color: var(--ink-dim); margin: 0 0 12px; }
+ul, ol { color: var(--ink-dim); padding-left: 22px; margin: 8px 0 12px; }
+ul li, ol li { padding: 3px 0; }
+
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: transform 0.04s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: var(--accent);
+  color: #1a0e02;
+  box-shadow: 0 8px 24px -8px rgba(var(--accent-rgb), 0.55);
+}
+.btn-primary:hover { background: var(--accent-soft); color: #1a0e02; }
+.btn-ghost {
+  color: var(--ink);
+  border-color: var(--line);
+  background: transparent;
+}
+.btn-ghost:hover { border-color: var(--ink-mute); color: var(--ink); }
+
+.meta {
+  color: var(--ink-mute);
+  font-size: 13px;
+  margin-left: 4px;
+}
+
+section { padding: 36px 0; border-top: 1px solid var(--line); }
+section:first-of-type { border-top: 0; }
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 14px;
+}
+.feature {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.feature h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.feature p { margin: 0; color: var(--ink-dim); font-size: 14px; }
+@media (max-width: 640px) { .features { grid-template-columns: 1fr; } }
+
+pre {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  color: var(--ink);
+  margin: 12px 0;
+}
+body.support pre { white-space: pre-wrap; }
+
+code.inline {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+  color: var(--accent-soft);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+ul.plain { list-style: none; padding: 0; margin: 0; color: var(--ink-dim); }
+ul.plain li { padding: 6px 0; border-bottom: 1px dashed var(--line); }
+ul.plain li:last-child { border-bottom: 0; }
+
+.faq details {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+.faq details[open] { border-color: rgba(var(--accent-rgb), 0.25); }
+.faq summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  list-style: none;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: "+";
+  color: var(--accent);
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 400;
+}
+.faq details[open] summary::after { content: "\2212"; }
+.faq details p {
+  margin: 10px 0 0;
+  color: var(--ink-dim);
+  font-size: 14px;
+}
+
+.toc {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: var(--shadow);
+  margin: 12px 0 0;
+}
+.toc strong { display: block; color: var(--ink); margin-bottom: 6px; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; }
+.toc ul { list-style: none; padding: 0; margin: 0; }
+.toc li { padding: 3px 0; }
+
+.callout {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: var(--ink-dim);
+  box-shadow: var(--shadow);
+  margin: 12px 0;
+}
+.callout strong { color: var(--ink); }
+
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.45);
+  color: var(--accent);
+  font-size: 32px; line-height: 1;
+  margin-bottom: 22px;
+}
+
+footer {
+  color: var(--ink-mute);
+  font-size: 13px;
+  padding: 32px 0 56px;
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+}
+footer .row {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px;
+  max-width: 880px; margin: 0 auto; padding: 0 24px;
+}
+footer nav a { color: var(--ink-dim); margin-left: 16px; }
+footer nav a:first-child { margin-left: 0; }
+footer nav a:hover { color: var(--ink); }
+
+@media (max-width: 480px) {
+  .wrap { padding: 0 16px; }
+  body.narrow main.wrap { padding: 0 16px; }
+  footer .row { padding: 0 16px; }
+  header.top { padding: 18px 16px; }
+  .top nav a { margin-left: 14px; }
+  .hero { padding: 32px 0 20px; }
+  body.thanks .hero { padding: 40px 0 20px; }
+  footer nav a { margin-left: 12px; }
+}
+
+/* BEGIN generated optimization styles */
+.brand-logo {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+}
+.brand-logo img {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+.responsive-image {
+  display: block;
+}
+.screenshot .responsive-image {
+  width: 100%;
+}
+.post-thumb .responsive-image {
+  width: 100%;
+  height: 100%;
+}
+/* END generated optimization styles */
+</style>
+<!-- END inline site styles -->
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="/"><picture class="brand-logo"><source srcset="/logo-28.webp 1x, /logo-56.webp 2x" type="image/webp" /><img src="/logo.png" alt="" width="28" height="28" /></picture> Radio Streamer</a>
+  <nav>
+    <a href="/#features">Features</a>
+    <a href="/docs/">Docs</a>
+    <a href="/support/">Support</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section class="pagehead">
+    <span class="eyebrow">Documentation</span>
+    <h1>Radio Streamer documentation</h1>
+    <p class="lede">Install, configure, and troubleshoot Radio Streamer for OBS Studio on macOS.</p>
+
+    <div class="toc">
+      <strong>On this page</strong>
+      <ul>
+        <li><a href="#install">Install</a></li>
+        <li><a href="#first-stream">First stream</a></li>
+        <li><a href="#url-format">Icecast URL format</a></li>
+        <li><a href="#codecs">Codecs and bitrates</a></li>
+        <li><a href="#audio-track">Audio track selection</a></li>
+        <li><a href="#reconnect">Reconnect behavior</a></li>
+        <li><a href="#requirements">Requirements</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </div>
+
+    <figure class="screenshot product-shot">
+      <img src="/product-1760.webp" srcset="/product-880.webp 880w, /product-1760.webp 1760w" sizes="(max-width: 760px) calc(100vw - 32px), 880px" alt="OBS Studio on macOS broadcasting a news commentary scene with the Radio Streamer dock streaming live to an Icecast mountpoint." width="3689" height="2091" loading="lazy" />
+      <figcaption>Radio Streamer running alongside an OBS scene during a live broadcast.</figcaption>
+    </figure>
+  </section>
+
+  <section id="install">
+    <h2>Install</h2>
+    <p>Released builds target macOS on Apple Silicon. Quit OBS first, then unzip the download to get <code class="inline">radiostreamer.plugin</code> and copy it into the OBS user plugin folder:</p>
+<pre>mkdir -p "$HOME/Library/Application Support/obs-studio/plugins"
+ditto radiostreamer.plugin "$HOME/Library/Application Support/obs-studio/plugins/radiostreamer.plugin"</pre>
+    <p>Restart OBS. The dock should appear under <code class="inline">Docks &gt; Radio Streamer</code>. If it isn't visible, enable it from that menu.</p>
+  </section>
+
+  <section id="first-stream">
+    <h2>First stream</h2>
+    <ol>
+      <li>Open <code class="inline">Docks &gt; Radio Streamer</code>.</li>
+      <li>Paste your Icecast URL into the URL field (see format below).</li>
+      <li>Pick a codec (MP3, AAC, or Opus) and a bitrate.</li>
+      <li>Pick an OBS audio track (1 through 6). The plugin reads from this track only.</li>
+      <li>Optionally enable Reconnect.</li>
+      <li>Click Start. The status indicator turns active when the connection is established.</li>
+    </ol>
+    <p>Stop ends the stream cleanly. It does not affect the main OBS recording or streaming output.</p>
+  </section>
+
+  <section id="url-format">
+    <h2>Icecast URL format</h2>
+<pre>icecast://source:password@server:port/mountpoint</pre>
+    <p>The <code class="inline">server</code> portion can be either a raw IP address or a hostname like <code class="inline">radio.yourdomain.com</code>. Using a hostname requires a DNS A record in your domain's zone pointing at the Icecast server's IP.</p>
+    <p>URL-encode special characters in the username, password, or mountpoint. For example, an <code class="inline">@</code> in a password becomes <code class="inline">%40</code>, a <code class="inline">:</code> becomes <code class="inline">%3A</code>, and a space becomes <code class="inline">%20</code>.</p>
+    <h3>Examples</h3>
+<pre>icecast://source:hunter2@198.51.100.10:8000/live.mp3
+icecast://source:hunter2@radio.example.com:8000/live.aac
+icecast://source:p%40ss@radio.example.com:8000/live.opus</pre>
+  </section>
+
+  <section id="codecs">
+    <h2>Codecs and bitrates</h2>
+    <p>Pick whichever your players and platform support. The plugin uses FFmpeg to encode and pushes to Icecast in the matching container.</p>
+    <h3>MP3 (libmp3lame)</h3>
+    <p>Most compatible. Works in browser audio elements, every podcast app, every legacy player. Use 128 kbps for talk, 192 to 320 kbps for music.</p>
+    <h3>AAC</h3>
+    <p>Better quality at the same bitrate as MP3. Widely supported in modern players. Use 96 to 128 kbps for talk, 128 to 192 kbps for music.</p>
+    <h3>Opus (libopus)</h3>
+    <p>Best quality per kilobit. Use it when you control the player and bandwidth is tight. Some legacy clients and CDN edges do not handle Opus over Icecast cleanly, so test before relying on it for a public mount.</p>
+  </section>
+
+  <section id="audio-track">
+    <h2>Audio track selection</h2>
+    <p>The dock has a single track selector covering OBS audio tracks 1 through 6. Whatever sources you have routed to that track in OBS Audio Mixer settings is what gets streamed. The plugin downmixes to stereo <code class="inline">s16le</code> at the active OBS sample rate before encoding.</p>
+    <p>If you want different mixes for your main stream and your radio feed, route different sources to different tracks in OBS, then point Radio Streamer at the radio track.</p>
+  </section>
+
+  <section id="reconnect">
+    <h2>Reconnect behavior</h2>
+    <p>When Reconnect is enabled, the plugin retries on disconnect using a fixed backoff: 2 seconds, then 5, then 10, then 20, then 30 seconds, then continues at 30 seconds. Pressing Stop cancels reconnect immediately.</p>
+    <p>Reconnect handles transient network drops and Icecast server restarts. It does not handle permanent authentication failures, since retrying with bad credentials would just spam the server.</p>
+  </section>
+
+  <section id="requirements">
+    <h2>Requirements</h2>
+    <ul>
+      <li>OBS Studio 31.x</li>
+      <li>macOS on Apple Silicon</li>
+      <li>FFmpeg on <code class="inline">PATH</code>, <code class="inline">/opt/homebrew/bin/ffmpeg</code>, <code class="inline">/usr/local/bin/ffmpeg</code>, or <code class="inline">/usr/bin/ffmpeg</code></li>
+      <li>FFmpeg must include the <code class="inline">icecast</code> protocol plus <code class="inline">libmp3lame</code>, <code class="inline">aac</code>, and <code class="inline">libopus</code> encoders</li>
+    </ul>
+    <p>Homebrew's default FFmpeg formula includes all of the above. Verify with:</p>
+<pre>ffmpeg -hide_banner -protocols 2&gt;&amp;1 | grep icecast
+ffmpeg -hide_banner -encoders 2&gt;&amp;1 | grep -E "libmp3lame|^ A...... aac |libopus"</pre>
+  </section>
+
+  <section id="troubleshooting">
+    <h2>Troubleshooting</h2>
+    <h3>The dock doesn't appear after install</h3>
+    <p>Confirm the plugin is at <code class="inline">~/Library/Application Support/obs-studio/plugins/radiostreamer.plugin</code> (case-sensitive). Open <code class="inline">Docks &gt; Radio Streamer</code> from the OBS menu bar to enable it. Check the OBS log (<code class="inline">Help &gt; Log Files &gt; View Current Log</code>) for plugin load errors.</p>
+    <h3>FFmpeg not found</h3>
+    <p>Install FFmpeg with Homebrew (<code class="inline">brew install ffmpeg</code>) or place a build at one of the search paths listed under Requirements. The plugin does not bundle FFmpeg.</p>
+    <h3>Connection refused or timeout</h3>
+    <p>Check that the Icecast server is reachable on the port you specified (<code class="inline">curl -v http://server:port/</code>). If you used a hostname, confirm DNS resolves correctly. Firewalls and cloud security groups commonly block source ports like 8000.</p>
+    <h3>401 Unauthorized</h3>
+    <p>Source username and password are wrong, or the mountpoint requires a different role. Test against the server with a known-good source like <code class="inline">ezstream</code> or <code class="inline">butt</code> to isolate the issue.</p>
+    <h3>Audio is silent on the listener side</h3>
+    <p>Confirm the OBS track you selected actually has audio routed to it (check Advanced Audio Properties). Verify the mountpoint accepts the codec format the plugin is sending (an <code class="inline">.mp3</code> mount expects MP3, not AAC).</p>
+    <h3>Stream cuts out periodically</h3>
+    <p>Enable Reconnect to ride out transient drops. If drops are frequent, check upstream bandwidth and packet loss between the OBS host and the Icecast server. Lower the bitrate to give yourself more headroom.</p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="row">
+    <div>Radio Streamer / Licensed under GPL v3.0 or later.</div>
+    <nav>
+      <a href="/docs/">Docs</a>
+      <a href="/blog/">Blog</a>
+      <a href="/support/">Support</a>
+      <a href="/tip-jar/">Tip Jar</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="https://github.com/awarsing/radiostreamer">GitHub</a>
+      <a href="https://github.com/awarsing/radiostreamer/blob/main/LICENSE">License</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
