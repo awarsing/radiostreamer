@@ -5,8 +5,8 @@ audio-only feed to an Icecast server through FFmpeg.
 
 ## Requirements
 
-- macOS 12 or later on Apple Silicon (arm64)
-- OBS Studio 31.x
+- macOS 13 or later on Apple Silicon (arm64)
+- OBS Studio 31.x or later (built and tested against OBS Studio 33.0.0)
 - FFmpeg with the `icecast` protocol and the `libmp3lame`, `aac`, and `libopus` encoders
 
 The easiest way to get a suitable FFmpeg is Homebrew:

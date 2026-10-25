@@ -1,0 +1,16 @@
+{
+    "name": "@CMAKE_PROJECT_NAME@",
+    "id": "@MACOS_BUNDLEID@",
+    "display_name": "@PLUGIN_DISPLAY_NAME@",
+    "version": "@PLUGIN_VERSION@",
+    "os_arch": "macos-arm64",
+    "description": "Audio-only Icecast streaming dock for OBS Studio.",
+    "long_description": "Radio Streamer adds a dedicated OBS dock that streams one selected OBS audio track to Icecast in MP3, AAC, or Opus through FFmpeg, independently of OBS's main stream and recording outputs.",
+    "urls": {
+        "repository": "https://github.com/awarsing/radiostreamer",
+        "website": "https://radiostreamer.app",
+        "support": "https://radiostreamer.app/support"
+    },
+    "has_icon": false,
+    "has_banner": false
+}

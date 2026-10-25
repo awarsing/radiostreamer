@@ -24,8 +24,13 @@
       "generator": "Xcode",
       "warnings": {"dev": true, "deprecated": true},
       "cacheVariables": {
-        "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "13.0",
         "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET": "",
+        "CMAKE_XCODE_ATTRIBUTE_TVOS_DEPLOYMENT_TARGET": "",
+        "CMAKE_XCODE_ATTRIBUTE_WATCHOS_DEPLOYMENT_TARGET": "",
+        "CMAKE_XCODE_ATTRIBUTE_XROS_DEPLOYMENT_TARGET": "",
+        "CMAKE_XCODE_ATTRIBUTE_DRIVERKIT_DEPLOYMENT_TARGET": "",
         "CODESIGN_IDENTITY": "$penv{CODESIGN_IDENT}",
         "CODESIGN_TEAM": "$penv{CODESIGN_TEAM}"
       }

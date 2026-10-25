@@ -54,6 +54,15 @@ target_sources(
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
 
+if(APPLE)
+  configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/macos/resources/manifest.json.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/manifest.json"
+    @ONLY
+  )
+  target_add_resource(${CMAKE_PROJECT_NAME} "${CMAKE_CURRENT_BINARY_DIR}/manifest.json")
+endif()
+
 if(BUILD_TESTING)
   add_executable(radio-settings-tests)
   set(_radio_settings_test_rpath "$<TARGET_FILE_DIR:Qt6::Core>")
