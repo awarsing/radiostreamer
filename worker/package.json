@@ -3,9 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "deploy": "npm run prepare:download && wrangler deploy && wrangler deploy -c wrangler.www.toml",
+    "deploy": "npm run prepare:download && wrangler deploy",
     "deploy:site": "npm run prepare:download && wrangler deploy",
-    "deploy:www": "wrangler deploy -c wrangler.www.toml",
     "dev": "wrangler dev",
     "prepare:download": "../.github/scripts/publish-site-download --optional",
     "typecheck": "tsc --noEmit",
